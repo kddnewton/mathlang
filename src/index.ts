@@ -3,14 +3,14 @@ type AST = (
   | { type: "number", value: number }
   | { type: "send", recv: AST, name: string, args: AST[] }
   | { type: "setLocal", name: string, value: AST }
-  | { type: "statements", stmts: AST[] }
+  | { type: "stmtList", stmts: AST[] }
 )
 
 const getLocal = (name: string): AST => ({ type: "getLocal", name });
 const number = (value: number): AST => ({ type: "number", value });
 const send = (recv: AST, name: string, args: AST[]) => ({ type: "send" as const, recv, name, args });
 const setLocal = (name: string, value: AST): AST => ({ type: "setLocal", name, value });
-const statements = (stmts: AST[]): AST => ({ type: "statements", stmts });
+const stmtList = (stmts: AST[]): AST => ({ type: "stmtList", stmts });
 
 const add = (left: AST, right: AST): AST => send(left, "+", [right]);
 const negative = (value: AST): AST => send(value, "@-", []);
@@ -26,7 +26,7 @@ const debug = (node: AST): string => {
       return `${debug(node.recv)}.${node.name}(${node.args.map(debug).join(", ")})`;
     case "setLocal":
       return `setLocal(${node.name}, ${debug(node.value)})`;
-    case "statements":
+    case "stmtList":
       return node.stmts.map(debug).join("\n");
   }
 };
@@ -71,7 +71,7 @@ const evaluate = (node: AST, locals: { [key: string]: number }): number => {
     case "setLocal":
       locals[node.name] = evaluate(node.value, locals);
       return locals[node.name];
-    case "statements":
+    case "stmtList":
       let value = null;
       node.stmts.forEach((stmt) => {
         value = evaluate(stmt, locals)
@@ -80,7 +80,7 @@ const evaluate = (node: AST, locals: { [key: string]: number }): number => {
   }
 };
 
-const tree = statements([
+const tree = stmtList([
   setLocal("foo", add(number(1), number(2))),
   setLocal("bar", subtract(getLocal("foo"), negative(number(3))))
 ]);
