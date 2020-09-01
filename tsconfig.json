@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "react",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "sourceMap": false,
+    "strict": true,
+    "target": "es5"
+  },
+  "include": ["src"],
+  "exclude": ["**/__tests__/*"]
+}
