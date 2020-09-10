@@ -1,32 +1,33 @@
 import { Nodes, Insns } from "./types";
 
-const compiler = (node: Nodes.All): Insns.All => {
+const compiler = (node: Nodes.All): Insns.All[] => {
   switch (node.type) {
     case "call": {
-      let insns: Insns.All[] = [{ type: "call" }, node.name, node.args.length];
+      let insns: Insns.All[] = [];
       node.args.forEach((arg) => {
         insns = insns.concat(compiler(arg));
       });
 
+      insns.push(node.args.length, node.name, { type: "call" });
       return insns;
     }
     case "define": {
-      let insns: Insns.All[] = [{ type: "define" }, node.name, node.paramList.params.length];
+      let insns: Insns.All[] = [compiler(node.stmtList)];
+      insns = insns.concat(node.paramList.params.reverse().map((param) => param.name));
 
-      insns = insns.concat(node.paramList.params.map((param) => param.name));
-      insns.push(compiler(node.stmtList));
-
+      insns.push(node.name, { type: "define" });
       return insns;
     }
     case "getLocal":
-      return [{ type: "getLocal" }, node.name];
+      return [node.name, { type: "getLocal" }];
     case "number":
-      return node.value;
+      return [node.value];
     case "program":
       return compiler(node.stmtList);
     case "setLocal": {
-      const insns: Insns.All[] = [{ type: "setLocal" }, node.name];
-      return insns.concat(compiler(node.value));
+      let insns = compiler(node.value);
+      insns.push(node.name, { type: "setLocal" });
+      return insns;
     }
     case "stmtList": {
       let insns: Insns.All[] = [];

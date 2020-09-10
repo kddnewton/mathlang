@@ -38,6 +38,7 @@ export declare namespace Insns {
   type Define = { type: "define" };
   type GetLocal = { type: "getLocal" };
   type SetLocal = { type: "setLocal" };
+  type Operation = Call | Define | GetLocal | SetLocal;
 
-  type All = Operand | Call | Define | GetLocal | SetLocal | All[];
+  type All = Operand | Operation | All[];
 }
