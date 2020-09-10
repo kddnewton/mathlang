@@ -45,7 +45,7 @@ const evaluateCall = (node: Nodes.Call, context: Context) => {
     return evaluator(define.stmtList, { funcs: context.funcs, locals });
   }
 
-  throw new Error(`unknown function: ${name}`);
+  throw new Error(`unknown function: ${node.name}`);
 };
 
 // Evaluate a visitable AST node within a certain context
