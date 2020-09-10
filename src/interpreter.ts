@@ -25,13 +25,13 @@ type Context = {
 };
 
 // Evaluate a call node within a certain context
-const evaluateCall = (node: Nodes.Call, context: Context) => {
+const interpretCall = (node: Nodes.Call, context: Context) => {
   const getArgs = (arity: number) => {
     if (arity !== node.args.length) {
       throw new Error(`got ${node.args.length} args, expected ${arity}`);
     }
 
-    return node.args.map((arg) => evaluator(arg, context));
+    return node.args.map((arg) => interpreter(arg, context));
   };
 
   if (isStdLibFunc(node.name)) {
@@ -47,17 +47,17 @@ const evaluateCall = (node: Nodes.Call, context: Context) => {
       locals[define.paramList.params[index].name] = arg;
     });
 
-    return evaluator(define.stmtList, { funcs: context.funcs, locals });
+    return interpreter(define.stmtList, { funcs: context.funcs, locals });
   }
 
   throw new Error(`unknown function: ${node.name}`);
 };
 
 // Evaluate a visitable AST node within a certain context
-const evaluator = (node: Nodes.All, context: Context = { funcs: {}, locals: {} }): number => {
+const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {} }): number => {
   switch (node.type) {
     case "call":
-      return evaluateCall(node, context);
+      return interpretCall(node, context);
     case "define":
       context.funcs[node.name] = node;
       return NaN;
@@ -66,17 +66,17 @@ const evaluator = (node: Nodes.All, context: Context = { funcs: {}, locals: {} }
     case "number":
       return node.value;
     case "program":
-      return evaluator(node.stmtList, context);
+      return interpreter(node.stmtList, context);
     case "setLocal":
-      context.locals[node.name] = evaluator(node.value, context);
+      context.locals[node.name] = interpreter(node.value, context);
       return context.locals[node.name];
     case "stmtList":
       let value = null;
       node.stmts.forEach((stmt) => {
-        value = evaluator(stmt, context)
+        value = interpreter(stmt, context)
       });
       return value || (value === 0 ? 0 : NaN);
   }
 };
 
-export default evaluator;
+export default interpreter;
