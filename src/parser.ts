@@ -17,41 +17,62 @@ import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp 
  * GetLocal -> Name
  */
 
-type Consumed<T> = { node: T, size: number } | null;
+type SomeConsumed<T> = { node: T, size: number };
+type Consumed<T> = SomeConsumed<T> | null;
+type Consumer<T> = (tokens: Tokens.All[], current: number) => Consumed<T>;
+
+function consume<T>(consumer: Consumer<T>, tokens: Tokens.All[], current: number): SomeConsumed<T> {
+  const consumed = consumer(tokens, current);
+  if (!consumed) {
+    throw new TypeError(tokens[current].type);
+  }
+
+  return consumed;
+}
+
+function matchName(tokens: Tokens.All[], index: number): boolean {
+  const token = tokens[index];
+  return token && token.type === "name";
+}
+
+function matchNumber(tokens: Tokens.All[], index: number): boolean {
+  const token = tokens[index];
+  return token && token.type === "number";
+}
+
+function matchSymbol(tokens: Tokens.All[], index: number, value: string): boolean {
+  const token = tokens[index];
+  return token && token.type === "symbol" && token.value === value;
+}
+
+function matchOperator(tokens: Tokens.All[], index: number, ...values: string[]): boolean {
+  const token = tokens[index];
+  return token && token.type === "operator" && values.indexOf(token.value) > -1;
+}
 
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
-  const token = tokens[current];
-
-  if (token.type === "number") {
-    return { node: number(token.value), size: 1 };
+  if (matchNumber(tokens, current)) {
+    return { node: number((tokens[current] as Tokens.Number).value), size: 1 };
   }
   return null;
 }
 
 // GetLocal -> Name
 function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.GetLocal> {
-  const token = tokens[current];
-
-  if (token.type === "name") {
-    return { node: getLocal(token.value), size: 1 };
+  if (matchName(tokens, current)) {
+    return { node: getLocal((tokens[current] as Tokens.Name).value), size: 1 };
   }
   return null;
 }
 
-// Value -> "(" Expr ")" | Number
+// Value -> "(" Expr ")" | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const token = tokens[current];
-
-  if (token.type === "symbol" && token.value === "(") {
+  if (matchSymbol(tokens, current, "(")) {
     const consumed = consumeExpr(tokens, current + 1);
 
-    if (consumed) {
-      const nextToken = tokens[current + 1 + consumed.size];
-
-      if (nextToken && nextToken.type === "symbol" && nextToken.value === ")") {
-        return { node: consumed.node, size: consumed.size + 2 };
-      }
+    if (consumed && matchSymbol(tokens, current + 1 + consumed.size, ")")) {
+      return { node: consumed.node, size: consumed.size + 2 };
     }
   }
 
@@ -60,13 +81,9 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
 
 // Power -> Value "^" Power | Value
 function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consumeValue(tokens, current);
-  if (!leftConsumed) {
-    throw new TypeError(tokens[current].type);
-  }
+  const leftConsumed = consume(consumeValue, tokens, current);
 
-  const operator = tokens[current + leftConsumed.size];
-  if (!operator || operator.type !== "operator" || operator.value !== "^") {
+  if (!matchOperator(tokens, current + leftConsumed.size, "^")) {
     return leftConsumed;
   }
 
@@ -83,22 +100,14 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
 
 // Term -> Power "*" Power | Power "/" Power | Power
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consumePower(tokens, current);
-  if (!leftConsumed) {
-    throw new TypeError(tokens[current].type);
-  }
-
-  const operator = tokens[current + leftConsumed.size];
-  if (!operator || operator.type !== "operator" || ["*", "/"].indexOf(operator.value) === -1) {
+  const leftConsumed = consume(consumePower, tokens, current);
+  if (!matchOperator(tokens, current + leftConsumed.size, "*", "/")) {
     return leftConsumed;
   }
 
-  const rightConsumed = consumePower(tokens, current + 1 + leftConsumed.size);
-  if (!rightConsumed) {
-    throw new TypeError(tokens[current + 1 + leftConsumed.size].type);
-  }
+  const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).value === "*" ? mul : div;
 
-  const builder = operator.value === "*" ? mul : div;
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
     size: leftConsumed.size + 1 + rightConsumed.size
@@ -107,22 +116,14 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
 
 // Expr -> Term "+" Term | Term "-" Term | Term
 function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consumeTerm(tokens, current);
-  if (!leftConsumed) {
-    throw new TypeError(tokens[current].type);
-  }
-
-  const operator = tokens[current + leftConsumed.size];
-  if (!operator || operator.type !== "operator" || ["+", "-"].indexOf(operator.value) === -1) {
+  const leftConsumed = consume(consumeTerm, tokens, current);
+  if (!matchOperator(tokens, current + leftConsumed.size, "+", "-")) {
     return leftConsumed;
   }
 
-  const rightConsumed = consumeTerm(tokens, current + 1 + leftConsumed.size);
-  if (!rightConsumed) {
-    throw new TypeError(tokens[current + 1 + leftConsumed.size].type);
-  }
+  const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).value === "+" ? add : sub;
 
-  const builder = operator.value === "+" ? add : sub;
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
     size: leftConsumed.size + 1 + rightConsumed.size
@@ -142,12 +143,7 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
 // SetLocal -> Name "=" Expr
 function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
   const token = tokens[current];
-  if (token.type !== "name") {
-    return null;
-  }
-
-  const nextToken = tokens[current + 1];
-  if (!nextToken || nextToken.type !== "symbol" || nextToken.value !== "=") {
+  if (token.type !== "name" || !matchSymbol(tokens, current + 1, "=")) {
     return null;
   }
 
@@ -169,21 +165,14 @@ function consumeStmt(tokens: Tokens.All[], current: number): Consumed<Nodes.Stmt
 
 // StmtList -> Stmt "\n" StmtList | Stmt
 function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.StmtList> {
-  const consumed = consumeStmt(tokens, current);
-  if (!consumed) {
-    throw new TypeError(tokens[current].type);
-  }
-
+  const consumed = consume(consumeStmt, tokens, current);
   const nextToken = tokens[current + consumed.size];
+
   if (!nextToken || nextToken.type !== "newline") {
     return { node: stmtList([consumed.node]), size: consumed.size };
   }
 
-  const nextStmtList = consumeStmtList(tokens, current + consumed.size + 1);
-  if (!nextStmtList) {
-    throw new TypeError(tokens[current + consumed.size + 1].type);
-  }
-
+  const nextStmtList = consume(consumeStmtList, tokens, current + consumed.size + 1);
   return {
     node: stmtList([consumed.node].concat(nextStmtList.node.stmts)),
     size: consumed.size + 1 + nextStmtList.size
@@ -192,17 +181,13 @@ function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.
 
 // Program -> StmtList
 function consumeProgram(tokens: Tokens.All[], current: number): Consumed<Nodes.Program> {
-  const consumed = consumeStmtList(tokens, current);
-  if (!consumed) {
-    throw new TypeError(tokens[current].type);
-  }
-
+  const consumed = consume(consumeStmtList, tokens, current);
   return { node: program(consumed.node), size: consumed.size };
 }
 
 const parser = (tokens: Tokens.All[]): Nodes.Program => {
-  const consumed = consumeProgram(tokens, 0);
-  if (!consumed || consumed.size !== tokens.length) {
+  const consumed = consume(consumeProgram, tokens, 0);
+  if (consumed.size !== tokens.length) {
     throw new TypeError(tokens[0].type);
   }
 
