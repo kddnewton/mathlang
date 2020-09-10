@@ -1,7 +1,7 @@
 import { Nodes } from "./types";
 
 // Output a node to readable pseudo-code
-const generator = (node: Nodes.Visitable, indent: string = ""): string => {
+const generator = (node: Nodes.All, indent: string = ""): string => {
   switch (node.type) {
     case "number":
       return `${indent}${node.value}`;

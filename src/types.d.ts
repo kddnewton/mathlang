@@ -16,7 +16,7 @@ export declare namespace Nodes {
   type Expr = Call | GetLocal | Number;
   type Stmt = Define | Expr | SetLocal;
 
-  type Visitable = Stmt | StmtList | Program;
+  type All = Stmt | StmtList | Program;
 }
 
 export declare namespace Tokens {

@@ -54,7 +54,7 @@ const evaluateCall = (node: Nodes.Call, context: Context) => {
 };
 
 // Evaluate a visitable AST node within a certain context
-const evaluator = (node: Nodes.Visitable, context: Context = { funcs: {}, locals: {} }): number => {
+const evaluator = (node: Nodes.All, context: Context = { funcs: {}, locals: {} }): number => {
   switch (node.type) {
     case "call":
       return evaluateCall(node, context);
