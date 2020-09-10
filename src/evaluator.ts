@@ -6,7 +6,12 @@ const stdlib = {
   add: (left: number, right: number) => left + right,
   sub: (left: number, right: number) => left - right,
   mul: (left: number, right: number) => left * right,
-  div: (left: number, right: number) => left / right,
+  div: (left: number, right: number) => {
+    if (right === 0) {
+      throw new Error("Division by 0");
+    }
+    return left / right;
+  },
   exp: (value: number, power: number) => Math.pow(value, power)
 };
 
