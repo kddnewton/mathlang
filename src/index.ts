@@ -5,8 +5,11 @@ import tokenizer from "./tokenizer";
 import parser from "./parser";
 
 const input =
-  `a = 3 + 2^3 * 3
-  a + 3`;
+`f(a) {
+  a + 1
+}
+f(2)
+`;
 const tree = parser(tokenizer(input));
 
 console.log(input);

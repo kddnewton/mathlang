@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp } from "./builders";
+import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp, define, paramList, param, call } from "./builders";
 
 /**
  * Grammar:
@@ -7,13 +7,15 @@ import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp 
  * Program -> StmtList
  * StmtList -> Stmt "\n" StmtList | Stmt
  * Stmt -> Define | SetLocal | Expr
- * Define -> Name "(" ParamList ")" "{" StmtList "}"
- * ParamList -> Name "," ParamList | Name | null
+ * Define -> Name "(" ")" "{" "\n" StmtList "}" | Name "(" ParamList ")" "{" "\n" StmtList "}"
+ * ParamList -> Name "," ParamList | Name
  * SetLocal -> Name "=" Expr
  * Expr -> Term "+" Term | Term "-" Term | Term
  * Term -> Power "*" Power | Power "/" Power | Power
  * Power -> Value "^" Power | Value
- * Value -> "(" Expr ")" | GetLocal | Number
+ * Value -> "(" Expr ")" | Call | GetLocal | Number
+ * Call -> Name "(" ")" |  Name "(" ArgList ")"
+ * ArgList -> Expr "," ArgList | Expr
  * GetLocal -> Name
  */
 
@@ -24,7 +26,7 @@ type Consumer<T> = (tokens: Tokens.All[], current: number) => Consumed<T>;
 function consume<T>(consumer: Consumer<T>, tokens: Tokens.All[], current: number): SomeConsumed<T> {
   const consumed = consumer(tokens, current);
   if (!consumed) {
-    throw new TypeError(tokens[current].type);
+    throw new TypeError(tokens[current] ? tokens[current].type : "EOF");
   }
 
   return consumed;
@@ -50,6 +52,11 @@ function matchOperator(tokens: Tokens.All[], index: number, ...values: string[])
   return token && token.type === "operator" && values.indexOf(token.value) > -1;
 }
 
+function matchNewLine(tokens: Tokens.All[], index: number): boolean {
+  const token = tokens[index];
+  return token && token.type === "newline";
+}
+
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
   if (matchNumber(tokens, current)) {
@@ -66,7 +73,44 @@ function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
   return null;
 }
 
-// Value -> "(" Expr ")" | GetLocal | Number
+// ArgList -> Expr "," ArgList | Expr
+function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr[]> {
+  const consumed = consumeExpr(tokens, current);
+  if (!consumed) {
+    return null;
+  }
+
+  if (!matchSymbol(tokens, current + consumed.size, ",")) {
+    return { node: [consumed.node], size: consumed.size };
+  }
+
+  const nextConsumed = consume(consumeArgList, tokens, current + consumed.size + 1);
+  return {
+    node: [consumed.node].concat(nextConsumed.node),
+    size: consumed.size + 1 + nextConsumed.size
+  };
+}
+
+// Call -> Name "(" ")" |  Name "(" ArgList ")"
+function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call> {
+  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "(")) {
+    return null;
+  }
+
+  const argList = consumeArgList(tokens, current + 2);
+  const argListSize = argList ? argList.size : 0;
+
+  if (!matchSymbol(tokens, current + 2 + argListSize, ")")) {
+    return null;
+  }
+
+  return {
+    node: call((tokens[current] as Tokens.Name).value, argList ? argList.node : []),
+    size: argListSize + 3
+  };
+}
+
+// Value -> "(" Expr ")" | Call | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   if (matchSymbol(tokens, current, "(")) {
     const consumed = consumeExpr(tokens, current + 1);
@@ -76,12 +120,15 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     }
   }
 
-  return consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
+  return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
 };
 
 // Power -> Value "^" Power | Value
 function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consume(consumeValue, tokens, current);
+  const leftConsumed = consumeValue(tokens, current);
+  if (!leftConsumed) {
+    return null;
+  }
 
   if (!matchOperator(tokens, current + leftConsumed.size, "^")) {
     return leftConsumed;
@@ -100,7 +147,11 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
 
 // Term -> Power "*" Power | Power "/" Power | Power
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consume(consumePower, tokens, current);
+  const leftConsumed = consumePower(tokens, current);
+  if (!leftConsumed) {
+    return null;
+  }
+
   if (!matchOperator(tokens, current + leftConsumed.size, "*", "/")) {
     return leftConsumed;
   }
@@ -116,7 +167,11 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
 
 // Expr -> Term "+" Term | Term "-" Term | Term
 function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  const leftConsumed = consume(consumeTerm, tokens, current);
+  const leftConsumed = consumeTerm(tokens, current);
+  if (!leftConsumed) {
+    return null;
+  }
+
   if (!matchOperator(tokens, current + leftConsumed.size, "+", "-")) {
     return leftConsumed;
   }
@@ -132,18 +187,54 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
 
 // ParamList -> Name "," ParamList | Name
 function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes.ParamList> {
-  return null;
+  if (!matchName(tokens, current)) {
+    return null;
+  }
+
+  const params = [param((tokens[current] as Tokens.Name).value)];
+  if (!matchSymbol(tokens, current + 1, ",")) {
+    return { node: paramList(params), size: 1 };
+  }
+
+  const nextConsumed = consume(consumeParamList, tokens, current + 2);
+  return {
+    node: paramList(params.concat(nextConsumed.node.params)),
+    size: 2 + nextConsumed.size
+  };
 }
 
-// Define -> Name "(" ")" "{" StmtList "}" | Name "(" ParamList ")" "{" StmtList "}"
+// Define -> Name "(" ")" "{" "\n" StmtList "}" | Name "(" ParamList ")" "{" "\n" StmtList "}"
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
-  return null;
+  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "(")) {
+    return null;
+  }
+
+  const params = consumeParamList(tokens, current + 2);
+  const paramsSize = params ? params.size : 0;
+
+  if (
+    !matchSymbol(tokens, current + 2 + paramsSize, ")") ||
+    !matchSymbol(tokens, current + 3 + paramsSize, "{") ||
+    !matchNewLine(tokens, current + 4 + paramsSize)
+  ) {
+    return null;
+  }
+
+  const body = consume(consumeStmtList, tokens, current + 5 + paramsSize);
+
+  if (!matchSymbol(tokens, current + 5 + paramsSize + body.size, "}")) {
+    return null;
+  }
+
+  return {
+    node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), body.node),
+    size: paramsSize + body.size + 6
+  };
 }
 
 // SetLocal -> Name "=" Expr
 function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
-  const token = tokens[current];
-  if (token.type !== "name" || !matchSymbol(tokens, current + 1, "=")) {
+  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "=")) {
     return null;
   }
 
@@ -153,7 +244,7 @@ function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
   }
 
   return {
-    node: setLocal(token.value, consumed.node),
+    node: setLocal((tokens[current] as Tokens.Name).value, consumed.node),
     size: consumed.size + 2
   };
 }
@@ -163,12 +254,14 @@ function consumeStmt(tokens: Tokens.All[], current: number): Consumed<Nodes.Stmt
   return consumeDefine(tokens, current) || consumeSetLocal(tokens, current) || consumeExpr(tokens, current);
 }
 
-// StmtList -> Stmt "\n" StmtList | Stmt
+// StmtList -> Stmt "\n" StmtList | Stmt "\n" | Stmt | null
 function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.StmtList> {
-  const consumed = consume(consumeStmt, tokens, current);
-  const nextToken = tokens[current + consumed.size];
+  const consumed = consumeStmt(tokens, current);
+  if (!consumed) {
+    return { node: stmtList([]), size: 0 };
+  }
 
-  if (!nextToken || nextToken.type !== "newline") {
+  if (!matchNewLine(tokens, current + consumed.size)) {
     return { node: stmtList([consumed.node]), size: consumed.size };
   }
 
