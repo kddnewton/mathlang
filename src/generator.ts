@@ -13,7 +13,7 @@ const generator = (node: Nodes.All, indent: string = ""): string => {
       return `${indent}${node.name}(${node.args.map((arg) => generator(arg)).join(", ")})`;
     case "define":
       const params = node.paramList.params.map((param) => param.name).join(", ");
-      return `${node.name}(${params}) {\n${generator(node.stmtList, `${indent}  `)}\n}\n`;
+      return `${node.name}(${params}) {\n${generator(node.stmtList, `${indent}  `)}\n}`;
     case "program":
       return generator(node.stmtList);
     case "stmtList":
