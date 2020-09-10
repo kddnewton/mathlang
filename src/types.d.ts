@@ -1,3 +1,15 @@
+export declare namespace Tokens {
+  type NewLine = { type: "newline" };
+
+  type Symbol = { type: "symbol", value: "(" | ")" | "{" | "}" | "," | "=" };
+  type Operator = { type: "operator", value: "+" | "-" | "*" | "/" | "^" };
+
+  type Number = { type: "number", value: number };
+  type Name = { type: "name", value: string };
+
+  type All = NewLine | Symbol | Operator | Number | Name;
+}
+
 export declare namespace Nodes {
   type Number = { type: "number", value: number };
 
@@ -19,14 +31,13 @@ export declare namespace Nodes {
   type All = Stmt | StmtList | Program;
 }
 
-export declare namespace Tokens {
-  type NewLine = { type: "newline" };
+export declare namespace Insns {
+  type Operand = string | number;
 
-  type Symbol = { type: "symbol", value: "(" | ")" | "{" | "}" | "," | "=" };
-  type Operator = { type: "operator", value: "+" | "-" | "*" | "/" | "^" };
+  type Call = { type: "call" };
+  type Define = { type: "define" };
+  type GetLocal = { type: "getLocal" };
+  type SetLocal = { type: "setLocal" };
 
-  type Number = { type: "number", value: number };
-  type Name = { type: "name", value: string };
-
-  type All = NewLine | Symbol | Operator | Number | Name;
+  type All = Operand | Call | Define | GetLocal | SetLocal | All[];
 }
