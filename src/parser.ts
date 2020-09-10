@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { program, stmtList, number, add, sub, mul, div, exp } from "./builders";
+import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp } from "./builders";
 
 /**
  * Grammar:
@@ -13,7 +13,8 @@ import { program, stmtList, number, add, sub, mul, div, exp } from "./builders";
  * Expr -> Term "+" Term | Term "-" Term | Term
  * Term -> Power "*" Power | Power "/" Power | Power
  * Power -> Value "^" Power | Value
- * Value -> "(" Expr ")" | Number
+ * Value -> "(" Expr ")" | GetLocal | Number
+ * GetLocal -> Name
  */
 
 type Consumed<T> = { node: T, size: number } | null;
@@ -24,6 +25,16 @@ function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Nu
 
   if (token.type === "number") {
     return { node: number(token.value), size: 1 };
+  }
+  return null;
+}
+
+// GetLocal -> Name
+function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.GetLocal> {
+  const token = tokens[current];
+
+  if (token.type === "name") {
+    return { node: getLocal(token.value), size: 1 };
   }
   return null;
 }
@@ -44,7 +55,7 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     }
   }
 
-  return consumeNumber(tokens, current);
+  return consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
 };
 
 // Power -> Value "^" Power | Value
@@ -118,9 +129,42 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   };
 }
 
+// ParamList -> Name "," ParamList | Name
+function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes.ParamList> {
+  return null;
+}
+
+// Define -> Name "(" ")" "{" StmtList "}" | Name "(" ParamList ")" "{" StmtList "}"
+function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
+  return null;
+}
+
+// SetLocal -> Name "=" Expr
+function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
+  const token = tokens[current];
+  if (token.type !== "name") {
+    return null;
+  }
+
+  const nextToken = tokens[current + 1];
+  if (!nextToken || nextToken.type !== "symbol" || nextToken.value !== "=") {
+    return null;
+  }
+
+  const consumed = consumeExpr(tokens, current + 2);
+  if (!consumed) {
+    return null;
+  }
+
+  return {
+    node: setLocal(token.value, consumed.node),
+    size: consumed.size + 2
+  };
+}
+
 // Stmt -> Define | SetLocal | Expr
 function consumeStmt(tokens: Tokens.All[], current: number): Consumed<Nodes.Stmt> {
-  return consumeExpr(tokens, current);
+  return consumeDefine(tokens, current) || consumeSetLocal(tokens, current) || consumeExpr(tokens, current);
 }
 
 // StmtList -> Stmt "\n" StmtList | Stmt

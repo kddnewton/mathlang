@@ -4,7 +4,9 @@ import evaluator from "./evaluator";
 import tokenizer from "./tokenizer";
 import parser from "./parser";
 
-const input = "3 + 2^3 * 3";
+const input =
+  `a = 3 + 2^3 * 3
+  a + 3`;
 const tree = parser(tokenizer(input));
 
 console.log(input);
