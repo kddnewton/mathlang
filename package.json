@@ -5,13 +5,21 @@
   "main": "index.js",
   "scripts": {
     "compile": "tsc --noEmit",
-    "math": "ts-node src"
+    "math": "bin/math.ts",
+    "test": "jest"
   },
   "author": "Kevin Deisz",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^26.0.13",
     "@types/node": "^14.6.4",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.3.0",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   }
 }

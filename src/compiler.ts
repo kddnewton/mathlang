@@ -4,7 +4,7 @@ const compiler = (node: Nodes.All): Insns.All[] => {
   switch (node.type) {
     case "call": {
       let insns: Insns.All[] = [];
-      node.args.forEach((arg) => {
+      node.args.reverse().forEach((arg) => {
         insns = insns.concat(compiler(arg));
       });
 
@@ -38,15 +38,15 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       return insns;
     }
     case "optAdd":
-      return [compiler(node.right), compiler(node.left), { type: "optAdd" }];
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "optAdd" });
     case "optSub":
-      return [compiler(node.right), compiler(node.left), { type: "optSub" }];
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "optSub" });
     case "optMul":
-      return [compiler(node.right), compiler(node.left), { type: "optMul" }];
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "optMul" });
     case "optDiv":
-      return [compiler(node.right), compiler(node.left), { type: "optDiv" }];
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "optDiv" });
     case "optExp":
-      return [compiler(node.right), compiler(node.left), { type: "optExp" }];
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "optExp" });
   }
 };
 
