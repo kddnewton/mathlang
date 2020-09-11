@@ -20,7 +20,9 @@ function isMapped(char: keyof typeof mapped): char is keyof typeof mapped {
   return Object.prototype.hasOwnProperty.call(mapped, char);
 }
 
-const tokenizer = (input: string) => {
+const tokenizer = (source: string) => {
+  const input = source.trim();
+
   let current = 0;
   const tokens: Tokens.All[] = [];
 
