@@ -11,7 +11,8 @@ const stdlib = {
   },
   exp: (value: number, power: number) => Math.pow(value, power),
   log: (value: number) => Math.log10(value),
-  ln: (value: number) => Math.log(value)
+  ln: (value: number) => Math.log(value),
+  sqrt: (value: number) => Math.sqrt(value)
 };
 
 export function isStdLibFunc(key: string): key is keyof typeof stdlib {
