@@ -1,7 +1,7 @@
 import { Nodes } from "./types";
 import { call, define, number, optAdd, optSub, optMul, optDiv, optExp, program, setLocal, stmtList } from "./builders";
 
-const isOptimizable = ({ left, right }: { left: Nodes.Expr, right: Nodes.Expr }) => (
+const isOptimizable = (left: Nodes.Expr, right: Nodes.Expr) => (
   left.type === "number" && right.type === "number"
 );
 
@@ -17,31 +17,51 @@ const optimizer = (node: Nodes.All): Nodes.All => {
       return setLocal(node.name, optimizer(node.value) as Nodes.Expr);
     case "stmtList":
       return stmtList(node.stmts.map(optimizer) as Nodes.Stmt[]);
-    case "optAdd":
-      if (isOptimizable(node)) {
+    case "optAdd": {
+      const optLeft = optimizer(node.left) as Nodes.Expr;
+      const optRight = optimizer(node.right) as Nodes.Expr;
+
+      if (isOptimizable(optLeft, optRight)) {
         return number((node.left as Nodes.Number).value + (node.right as Nodes.Number).value);
       }
-      return optAdd(optimizer(node.left) as Nodes.Expr, optimizer(node.right) as Nodes.Expr);
-    case "optSub":
-      if (isOptimizable(node)) {
+      return optAdd(optLeft, optRight);
+    }
+    case "optSub":{
+      const optLeft = optimizer(node.left) as Nodes.Expr;
+      const optRight = optimizer(node.right) as Nodes.Expr;
+
+      if (isOptimizable(optLeft, optRight)) {
         return number((node.left as Nodes.Number).value - (node.right as Nodes.Number).value);
       }
-      return optSub(optimizer(node.left) as Nodes.Expr, optimizer(node.right) as Nodes.Expr);
-    case "optMul":
-      if (isOptimizable(node)) {
+      return optSub(optLeft, optRight);
+    }
+    case "optMul":{
+      const optLeft = optimizer(node.left) as Nodes.Expr;
+      const optRight = optimizer(node.right) as Nodes.Expr;
+
+      if (isOptimizable(optLeft, optRight)) {
         return number((node.left as Nodes.Number).value * (node.right as Nodes.Number).value);
       }
-      return optMul(optimizer(node.left) as Nodes.Expr, optimizer(node.right) as Nodes.Expr);
-    case "optDiv":
-      if (isOptimizable(node)) {
+      return optMul(optLeft, optRight);
+    }
+    case "optDiv":{
+      const optLeft = optimizer(node.left) as Nodes.Expr;
+      const optRight = optimizer(node.right) as Nodes.Expr;
+
+      if (isOptimizable(optLeft, optRight)) {
         return number((node.left as Nodes.Number).value / (node.right as Nodes.Number).value);
       }
-      return optDiv(optimizer(node.left) as Nodes.Expr, optimizer(node.right) as Nodes.Expr);
-    case "optExp":
-      if (isOptimizable(node)) {
+      return optDiv(optLeft, optRight);
+    }
+    case "optExp":{
+      const optLeft = optimizer(node.left) as Nodes.Expr;
+      const optRight = optimizer(node.right) as Nodes.Expr;
+
+      if (isOptimizable(optLeft, optRight)) {
         return number(Math.pow((node.left as Nodes.Number).value, (node.right as Nodes.Number).value));
       }
-      return optExp(optimizer(node.left) as Nodes.Expr, optimizer(node.right) as Nodes.Expr);
+      return optExp(optLeft, optRight);
+    }
     default:
       return node;
   }
