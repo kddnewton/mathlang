@@ -4,6 +4,7 @@
   "description": "Math!",
   "main": "index.js",
   "scripts": {
+    "compile": "tsc --noEmit",
     "math": "ts-node src"
   },
   "author": "Kevin Deisz",
