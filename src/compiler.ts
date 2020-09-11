@@ -15,7 +15,7 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       let insns: Insns.All[] = [compiler(node.stmtList)];
       insns = insns.concat(node.paramList.params.reverse().map((param) => param.name));
 
-      insns.push(node.name, { type: "define" });
+      insns.push(node.paramList.params.length, node.name, { type: "define" });
       return insns;
     }
     case "getLocal":
