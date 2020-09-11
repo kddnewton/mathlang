@@ -11,9 +11,9 @@ import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp,
  *   | Name LParen ParamList RParen LBrace NewLine StmtList RBrace
  * ParamList -> Name Comma ParamList | Name
  * SetLocal -> Name Equals Expr
- * Expr -> Term "+" Term | Term "-" Term | Term
- * Term -> Power "*" Power | Power "/" Power | Power
- * Power -> Value "^" Power | Value
+ * Expr -> Term Plus Term | Term Minus Term | Term
+ * Term -> Power Times Power | Power Over Power | Power
+ * Power -> Value ToThe Power | Value
  * Value -> LParen Expr RParen | Call | GetLocal | Number
  * Call -> Name LParen RParen |  Name LParen ArgList RParen
  * ArgList -> Expr Comma ArgList | Expr
@@ -38,8 +38,10 @@ const makeMatcher = (type: string) => (tokens: Tokens.All[], index: number): boo
   return token && token.type === type;
 };
 
+const matchNewLine = makeMatcher("newline");
 const matchName = makeMatcher("name");
 const matchNumber = makeMatcher("number");
+
 const matchLParen = makeMatcher("lparen");
 const matchRParen = makeMatcher("rparen");
 const matchLBrace = makeMatcher("lbrace");
@@ -47,15 +49,11 @@ const matchRBrace = makeMatcher("rbrace");
 const matchComma = makeMatcher("comma");
 const matchEquals = makeMatcher("equals");
 
-function matchOperator(tokens: Tokens.All[], index: number, ...values: string[]): boolean {
-  const token = tokens[index];
-  return token && token.type === "operator" && values.indexOf(token.value) > -1;
-}
-
-function matchNewLine(tokens: Tokens.All[], index: number): boolean {
-  const token = tokens[index];
-  return token && token.type === "newline";
-}
+const matchPlus = makeMatcher("plus");
+const matchMinus = makeMatcher("minus");
+const matchTimes = makeMatcher("times");
+const matchOver = makeMatcher("over");
+const matchToThe = makeMatcher("tothe");
 
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
@@ -91,7 +89,7 @@ function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.E
   };
 }
 
-// Call -> Name LParen RParen |  Name LParen ArgList RParen
+// Call -> Name LParen RParen | Name LParen ArgList RParen
 function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call> {
   if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
     return null;
@@ -123,14 +121,14 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
 };
 
-// Power -> Value "^" Power | Value
+// Power -> Value ToThe Power | Value
 function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumeValue(tokens, current);
   if (!leftConsumed) {
     return null;
   }
 
-  if (!matchOperator(tokens, current + leftConsumed.size, "^")) {
+  if (!matchToThe(tokens, current + leftConsumed.size)) {
     return leftConsumed;
   }
 
@@ -145,19 +143,19 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   };
 }
 
-// Term -> Power "*" Power | Power "/" Power | Power
+// Term -> Power Times Power | Power Over Power | Power
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumePower(tokens, current);
   if (!leftConsumed) {
     return null;
   }
 
-  if (!matchOperator(tokens, current + leftConsumed.size, "*", "/")) {
+  if (!matchTimes(tokens, current + leftConsumed.size) && !matchOver(tokens, current + leftConsumed.size)) {
     return leftConsumed;
   }
 
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).value === "*" ? mul : div;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "times" ? mul : div;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
@@ -165,19 +163,19 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   };
 }
 
-// Expr -> Term "+" Term | Term "-" Term | Term
+// Expr -> Term Plus Term | Term Minus Term | Term
 function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumeTerm(tokens, current);
   if (!leftConsumed) {
     return null;
   }
 
-  if (!matchOperator(tokens, current + leftConsumed.size, "+", "-")) {
+  if (!matchPlus(tokens, current + leftConsumed.size) && !matchMinus(tokens, current + leftConsumed.size)) {
     return leftConsumed;
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).value === "+" ? add : sub;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? add : sub;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),

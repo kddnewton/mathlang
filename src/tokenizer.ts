@@ -1,24 +1,23 @@
 import { Tokens } from "./types";
 
-const operators = ["+", "-", "*", "/", "^"];
 const numbers = /[0-9]/;
 const letters = /[a-z]/i;
-
-function isOperator(value: string): value is Tokens.Operator["value"] {
-  return operators.indexOf(value) > -1;
-}
-
-const symbols: { [key: string]: Tokens.Symbol["type"] } = {
+const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["type"] } = {
   "(": "lparen",
   ")": "rparen",
   "{": "lbrace",
   "}": "rbrace",
   ",": "comma",
-  "=": "equals"
+  "=": "equals",
+  "+": "plus",
+  "-": "minus",
+  "*": "times",
+  "/": "over",
+  "^": "tothe"
 };
 
-function isSymbol(char: keyof typeof symbols): char is keyof typeof symbols {
-  return Object.prototype.hasOwnProperty.call(symbols, char);
+function isMapped(char: keyof typeof mapped): char is keyof typeof mapped {
+  return Object.prototype.hasOwnProperty.call(mapped, char);
 }
 
 const tokenizer = (input: string) => {
@@ -42,14 +41,8 @@ const tokenizer = (input: string) => {
       continue;
     }
 
-    if (isSymbol(char)) {
-      tokens.push({ type: symbols[char] });
-      current++;
-      continue;
-    }
-
-    if (isOperator(char)) {
-      tokens.push({ type: "operator", value: char });
+    if (isMapped(char)) {
+      tokens.push({ type: mapped[char] });
       current++;
       continue;
     }
