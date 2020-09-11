@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp, define, paramList, param, call } from "./builders";
+import { program, stmtList, getLocal, setLocal, number, optAdd, sub, mul, div, exp, define, paramList, param, call } from "./builders";
 
 /**
  * Grammar:
@@ -175,7 +175,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? add : sub;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? optAdd : sub;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),

@@ -18,6 +18,8 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
       return formatter(node.stmtList);
     case "stmtList":
       return node.stmts.map((stmt) => formatter(stmt, indent)).join("\n");
+    case "optAdd":
+      return `${indent}${formatter(node.left)} + ${formatter(node.right)}`;
   }
 };
 

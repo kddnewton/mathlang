@@ -54,6 +54,9 @@ const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): nu
           locals[name] = stack.pop();
           break;
         }
+        case "optAdd":
+          stack.push(stack.pop() + stack.pop());
+          break;
       }
     } else {
       stack.push(insn);

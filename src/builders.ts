@@ -14,12 +14,13 @@ export const paramList = (params: Nodes.Param[]) => ({ type: "paramList" as cons
 export const stmtList = (stmts: Nodes.Stmt[]): Nodes.StmtList => ({ type: "stmtList", stmts });
 export const program = (stmtList: Nodes.StmtList): Nodes.Program => ({ type: "program", stmtList });
 
+export const optAdd = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptAdd => ({ type: "optAdd", left, right });
+
 // Higher-level AST node builders, could be used for further optimizations
 const unary = (name: string) => (value: Nodes.Expr): Nodes.Call => call(name, [value]);
 const binary = (name: string) => (left: Nodes.Expr, right: Nodes.Expr): Nodes.Call => call(name, [left, right]);
 
 export const neg = unary("neg");
-export const add = binary("add");
 export const sub = binary("sub");
 export const mul = binary("mul");
 export const div = binary("div");

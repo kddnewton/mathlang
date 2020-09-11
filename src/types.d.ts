@@ -37,7 +37,10 @@ export declare namespace Nodes {
   type StmtList = { type: "stmtList", stmts: Stmt[] };
   type Program = { type: "program", stmtList: StmtList };
 
-  type Expr = Call | GetLocal | Number;
+  type OptAdd = { type: "optAdd", left: Expr, right: Expr };
+  type Opt = OptAdd;
+
+  type Expr = Opt | Call | GetLocal | Number;
   type Stmt = Define | Expr | SetLocal;
 
   type All = Stmt | StmtList | Program;
@@ -50,7 +53,10 @@ export declare namespace Insns {
   type Define = { type: "define" };
   type GetLocal = { type: "getLocal" };
   type SetLocal = { type: "setLocal" };
-  type Operation = Call | Define | GetLocal | SetLocal;
 
+  type OptAdd = { type: "optAdd" };
+  type Opt = OptAdd;
+
+  type Operation = Opt | Call | Define | GetLocal | SetLocal;
   type All = Operand | Operation | All[];
 }

@@ -58,6 +58,8 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
         value = interpreter(stmt, context)
       });
       return value || (value === 0 ? 0 : NaN);
+    case "optAdd":
+      return interpreter(node.left) + interpreter(node.right);
   }
 };
 

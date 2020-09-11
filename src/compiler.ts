@@ -37,6 +37,8 @@ const compiler = (node: Nodes.All): Insns.All[] => {
 
       return insns;
     }
+    case "optAdd":
+      return [compiler(node.right), compiler(node.left), { type: "optAdd" }];
   }
 };
 
