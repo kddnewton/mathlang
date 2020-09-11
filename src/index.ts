@@ -5,10 +5,6 @@ import machine from "./machine";
 import parser from "./parser";
 import tokenizer from "./tokenizer";
 
-const tree = parser(tokenizer(process.argv[2]));
-const insns = compiler(tree);
+const evaluate = (source: string) => machine(compiler(parser(tokenizer(source))));
 
-console.log(generator(tree));
-console.log(interpreter(tree));
-console.log(insns);
-console.log(machine(insns));
+export default evaluate;
