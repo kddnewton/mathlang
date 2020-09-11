@@ -5,17 +5,18 @@ import { program, stmtList, getLocal, setLocal, number, add, sub, mul, div, exp,
  * Grammar:
  * 
  * Program -> StmtList
- * StmtList -> Stmt "\n" StmtList | Stmt
+ * StmtList -> Stmt NewLine StmtList | Stmt
  * Stmt -> Define | SetLocal | Expr
- * Define -> Name "(" ")" "{" "\n" StmtList "}" | Name "(" ParamList ")" "{" "\n" StmtList "}"
- * ParamList -> Name "," ParamList | Name
- * SetLocal -> Name "=" Expr
+ * Define -> Name LParen RParen LBrace NewLine StmtList RBrace
+ *   | Name LParen ParamList RParen LBrace NewLine StmtList RBrace
+ * ParamList -> Name Comma ParamList | Name
+ * SetLocal -> Name Equals Expr
  * Expr -> Term "+" Term | Term "-" Term | Term
  * Term -> Power "*" Power | Power "/" Power | Power
  * Power -> Value "^" Power | Value
- * Value -> "(" Expr ")" | Call | GetLocal | Number
- * Call -> Name "(" ")" |  Name "(" ArgList ")"
- * ArgList -> Expr "," ArgList | Expr
+ * Value -> LParen Expr RParen | Call | GetLocal | Number
+ * Call -> Name LParen RParen |  Name LParen ArgList RParen
+ * ArgList -> Expr Comma ArgList | Expr
  * GetLocal -> Name
  */
 
@@ -32,20 +33,19 @@ function consume<T>(consumer: Consumer<T>, tokens: Tokens.All[], current: number
   return consumed;
 }
 
-function matchName(tokens: Tokens.All[], index: number): boolean {
+const makeMatcher = (type: string) => (tokens: Tokens.All[], index: number): boolean => {
   const token = tokens[index];
-  return token && token.type === "name";
-}
+  return token && token.type === type;
+};
 
-function matchNumber(tokens: Tokens.All[], index: number): boolean {
-  const token = tokens[index];
-  return token && token.type === "number";
-}
-
-function matchSymbol(tokens: Tokens.All[], index: number, value: string): boolean {
-  const token = tokens[index];
-  return token && token.type === "symbol" && token.value === value;
-}
+const matchName = makeMatcher("name");
+const matchNumber = makeMatcher("number");
+const matchLParen = makeMatcher("lparen");
+const matchRParen = makeMatcher("rparen");
+const matchLBrace = makeMatcher("lbrace");
+const matchRBrace = makeMatcher("rbrace");
+const matchComma = makeMatcher("comma");
+const matchEquals = makeMatcher("equals");
 
 function matchOperator(tokens: Tokens.All[], index: number, ...values: string[]): boolean {
   const token = tokens[index];
@@ -73,14 +73,14 @@ function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
   return null;
 }
 
-// ArgList -> Expr "," ArgList | Expr
+// ArgList -> Expr Comma ArgList | Expr
 function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr[]> {
   const consumed = consumeExpr(tokens, current);
   if (!consumed) {
     return null;
   }
 
-  if (!matchSymbol(tokens, current + consumed.size, ",")) {
+  if (!matchComma(tokens, current + consumed.size)) {
     return { node: [consumed.node], size: consumed.size };
   }
 
@@ -91,16 +91,16 @@ function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.E
   };
 }
 
-// Call -> Name "(" ")" |  Name "(" ArgList ")"
+// Call -> Name LParen RParen |  Name LParen ArgList RParen
 function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call> {
-  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "(")) {
+  if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
     return null;
   }
 
   const argList = consumeArgList(tokens, current + 2);
   const argListSize = argList ? argList.size : 0;
 
-  if (!matchSymbol(tokens, current + 2 + argListSize, ")")) {
+  if (!matchRParen(tokens, current + 2 + argListSize)) {
     return null;
   }
 
@@ -110,12 +110,12 @@ function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call
   };
 }
 
-// Value -> "(" Expr ")" | Call | GetLocal | Number
+// Value -> LParen Expr RParen | Call | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  if (matchSymbol(tokens, current, "(")) {
+  if (matchLParen(tokens, current)) {
     const consumed = consumeExpr(tokens, current + 1);
 
-    if (consumed && matchSymbol(tokens, current + 1 + consumed.size, ")")) {
+    if (consumed && matchRParen(tokens, current + 1 + consumed.size)) {
       return { node: consumed.node, size: consumed.size + 2 };
     }
   }
@@ -185,14 +185,14 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   };
 }
 
-// ParamList -> Name "," ParamList | Name
+// ParamList -> Name Comma ParamList | Name
 function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes.ParamList> {
   if (!matchName(tokens, current)) {
     return null;
   }
 
   const params = [param((tokens[current] as Tokens.Name).value)];
-  if (!matchSymbol(tokens, current + 1, ",")) {
+  if (!matchComma(tokens, current + 1)) {
     return { node: paramList(params), size: 1 };
   }
 
@@ -203,9 +203,10 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
   };
 }
 
-// Define -> Name "(" ")" "{" "\n" StmtList "}" | Name "(" ParamList ")" "{" "\n" StmtList "}"
+// Define -> Name LParen RParen LBrace NewLine StmtList RBrace
+//   | Name LParen ParamList RParen LBrace NewLine StmtList RBrace
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
-  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "(")) {
+  if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
     return null;
   }
 
@@ -213,8 +214,8 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
   const paramsSize = params ? params.size : 0;
 
   if (
-    !matchSymbol(tokens, current + 2 + paramsSize, ")") ||
-    !matchSymbol(tokens, current + 3 + paramsSize, "{") ||
+    !matchRParen(tokens, current + 2 + paramsSize) ||
+    !matchLBrace(tokens, current + 3 + paramsSize) ||
     !matchNewLine(tokens, current + 4 + paramsSize)
   ) {
     return null;
@@ -222,7 +223,7 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
 
   const body = consume(consumeStmtList, tokens, current + 5 + paramsSize);
 
-  if (!matchSymbol(tokens, current + 5 + paramsSize + body.size, "}")) {
+  if (!matchRBrace(tokens, current + 5 + paramsSize + body.size)) {
     return null;
   }
 
@@ -232,9 +233,9 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
   };
 }
 
-// SetLocal -> Name "=" Expr
+// SetLocal -> Name Equals Expr
 function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
-  if (!matchName(tokens, current) || !matchSymbol(tokens, current + 1, "=")) {
+  if (!matchName(tokens, current) || !matchEquals(tokens, current + 1)) {
     return null;
   }
 
@@ -254,7 +255,7 @@ function consumeStmt(tokens: Tokens.All[], current: number): Consumed<Nodes.Stmt
   return consumeDefine(tokens, current) || consumeSetLocal(tokens, current) || consumeExpr(tokens, current);
 }
 
-// StmtList -> Stmt "\n" StmtList | Stmt "\n" | Stmt | null
+// StmtList -> Stmt NewLine StmtList | Stmt NewLine | Stmt | null
 function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.StmtList> {
   const consumed = consumeStmt(tokens, current);
   if (!consumed) {

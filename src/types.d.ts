@@ -1,12 +1,21 @@
 export declare namespace Tokens {
   type NewLine = { type: "newline" };
 
-  type Symbol = { type: "symbol", value: "(" | ")" | "{" | "}" | "," | "=" };
+  type LParen = { type: "lparen" };
+  type RParen = { type: "rparen" };
+
+  type LBrace = { type: "lbrace" };
+  type RBrace = { type: "rbrace" };
+
+  type Comma = { type: "comma" };
+  type Equals = { type: "equals" };
+
   type Operator = { type: "operator", value: "+" | "-" | "*" | "/" | "^" };
 
   type Number = { type: "number", value: number };
   type Name = { type: "name", value: string };
 
+  type Symbol = LParen | RParen | LBrace | RBrace | Comma | Equals;
   type All = NewLine | Symbol | Operator | Number | Name;
 }
 

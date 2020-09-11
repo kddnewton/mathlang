@@ -1,17 +1,24 @@
 import { Tokens } from "./types";
 
-const symbols = ["(", ")", "{", "}", ",", "="];
 const operators = ["+", "-", "*", "/", "^"];
-
 const numbers = /[0-9]/;
 const letters = /[a-z]/i;
 
-function isSymbol(value: string): value is Tokens.Symbol["value"] {
-  return symbols.indexOf(value) > -1;
-}
-
 function isOperator(value: string): value is Tokens.Operator["value"] {
   return operators.indexOf(value) > -1;
+}
+
+const symbols: { [key: string]: Tokens.Symbol["type"] } = {
+  "(": "lparen",
+  ")": "rparen",
+  "{": "lbrace",
+  "}": "rbrace",
+  ",": "comma",
+  "=": "equals"
+};
+
+function isSymbol(char: keyof typeof symbols): char is keyof typeof symbols {
+  return Object.prototype.hasOwnProperty.call(symbols, char);
 }
 
 const tokenizer = (input: string) => {
@@ -22,7 +29,10 @@ const tokenizer = (input: string) => {
     let char = input[current];
 
     if (char === "\n") {
-      tokens.push({ type: "newline" });
+      if (!tokens[tokens.length - 1] || tokens[tokens.length - 1].type !== "newline") {
+        tokens.push({ type: "newline" });
+      }
+
       current++;
       continue;
     }
@@ -33,7 +43,7 @@ const tokenizer = (input: string) => {
     }
 
     if (isSymbol(char)) {
-      tokens.push({ type: "symbol", value: char });
+      tokens.push({ type: symbols[char] });
       current++;
       continue;
     }
