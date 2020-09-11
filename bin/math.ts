@@ -6,7 +6,7 @@ import { evaluate, format } from "../src";
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
 
-if (["-f", "--format"].indexOf(args[0])) {
+if (["-f", "--format"].indexOf(args[0]) > -1) {
   args.shift();
   command = format;
 }

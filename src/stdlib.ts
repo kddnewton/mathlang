@@ -9,7 +9,9 @@ const stdlib = {
     }
     return left / right;
   },
-  exp: (value: number, power: number) => Math.pow(value, power)
+  exp: (value: number, power: number) => Math.pow(value, power),
+  log: (value: number) => Math.log10(value),
+  ln: (value: number) => Math.log(value)
 };
 
 export function isStdLibFunc(key: string): key is keyof typeof stdlib {
