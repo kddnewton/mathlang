@@ -4,7 +4,7 @@ A small language I'm writing to learn more about compilers/interpreters/virtual 
 
 ## Syntax
 
-*Basics*
+### Basics
 
 Each line is considered its own statement, and can be:
 
@@ -12,7 +12,7 @@ Each line is considered its own statement, and can be:
 - a function definition
 - a local variable assignment
 
-*Expressions*
+### Expressions
 
 Expressions looks like you would normally express math on paper. Here are some examples:
 
@@ -23,7 +23,7 @@ Expressions looks like you would normally express math on paper. Here are some e
 - `7^8`
 - `(1 + 2) * 3`
 
-*Function definitions*
+### Functions
 
 Functions are local to whatever context you're currently in (top-level or another function). They become defined wherever you define them and are not hoisted (so you can only call them after you've declared them, there are no forward-declarations). They suppose implicit returns, so whatever the final expression in your function body will be what is returned. Here is an example:
 
@@ -39,7 +39,21 @@ You would then be able to call that function with:
 f(x)
 ```
 
-*Local variables*
+#### Built-in
+
+A couple of functions comes built-in to the runtime. Those include:
+
+- `neg(x)` - negate a number
+- `add(x, y)` - add two numbers
+- `sub(x, y)` - subtract two numbers
+- `mul(x, y)` - multiply two numbers
+- `div(x, y)` - divide two numbers
+- `exp(x, p)` - raise a number to a power
+- `log(x)` - get the base10 log of a number
+- `ln(x)` - get the natural log of a number
+- `sqrt(x)` - get the square root of a number
+
+### Local
 
 There is support for local variables either at the top-level or inside a function. Local variables are only scoped to their current context and are not inherited by inner functions. They are untyped, as the only type at the moment is a number. Here are examples of setting and using local variables:
 
