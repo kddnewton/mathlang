@@ -57,6 +57,18 @@ const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): nu
         case "optAdd":
           stack.push(stack.pop() + stack.pop());
           break;
+        case "optSub":
+          stack.push(stack.pop() - stack.pop());
+          break;
+        case "optMul":
+          stack.push(stack.pop() * stack.pop());
+          break;
+        case "optDiv":
+          stack.push(stack.pop() / stack.pop());
+          break;
+        case "optExp":
+          stack.push(Math.pow(stack.pop(), stack.pop()));
+          break;
       }
     } else {
       stack.push(insn);

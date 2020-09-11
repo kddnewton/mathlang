@@ -20,6 +20,14 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
       return node.stmts.map((stmt) => formatter(stmt, indent)).join("\n");
     case "optAdd":
       return `${indent}${formatter(node.left)} + ${formatter(node.right)}`;
+    case "optSub":
+      return `${indent}${formatter(node.left)} - ${formatter(node.right)}`;
+    case "optMul":
+      return `${indent}${formatter(node.left)} * ${formatter(node.right)}`;
+    case "optDiv":
+      return `${indent}${formatter(node.left)} / ${formatter(node.right)}`;
+    case "optExp":
+      return `${indent}${formatter(node.left)}^${formatter(node.right)}`;
   }
 };
 

@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { program, stmtList, getLocal, setLocal, number, optAdd, sub, mul, div, exp, define, paramList, param, call } from "./builders";
+import { program, stmtList, getLocal, setLocal, number, define, paramList, param, call, optAdd, optSub, optMul, optDiv, optExp } from "./builders";
 
 /**
  * Grammar:
@@ -138,7 +138,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   }
 
   return {
-    node: exp(leftConsumed.node, rightConsumed.node),
+    node: optExp(leftConsumed.node, rightConsumed.node),
     size: leftConsumed.size + 1 + rightConsumed.size
   };
 }
@@ -155,7 +155,7 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "times" ? mul : div;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "times" ? optMul : optDiv;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
@@ -175,7 +175,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? optAdd : sub;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? optAdd : optSub;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),

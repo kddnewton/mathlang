@@ -39,6 +39,14 @@ const compiler = (node: Nodes.All): Insns.All[] => {
     }
     case "optAdd":
       return [compiler(node.right), compiler(node.left), { type: "optAdd" }];
+    case "optSub":
+      return [compiler(node.right), compiler(node.left), { type: "optSub" }];
+    case "optMul":
+      return [compiler(node.right), compiler(node.left), { type: "optMul" }];
+    case "optDiv":
+      return [compiler(node.right), compiler(node.left), { type: "optDiv" }];
+    case "optExp":
+      return [compiler(node.right), compiler(node.left), { type: "optExp" }];
   }
 };
 

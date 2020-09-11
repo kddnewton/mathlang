@@ -15,13 +15,7 @@ export const stmtList = (stmts: Nodes.Stmt[]): Nodes.StmtList => ({ type: "stmtL
 export const program = (stmtList: Nodes.StmtList): Nodes.Program => ({ type: "program", stmtList });
 
 export const optAdd = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptAdd => ({ type: "optAdd", left, right });
-
-// Higher-level AST node builders, could be used for further optimizations
-const unary = (name: string) => (value: Nodes.Expr): Nodes.Call => call(name, [value]);
-const binary = (name: string) => (left: Nodes.Expr, right: Nodes.Expr): Nodes.Call => call(name, [left, right]);
-
-export const neg = unary("neg");
-export const sub = binary("sub");
-export const mul = binary("mul");
-export const div = binary("div");
-export const exp = binary("exp");
+export const optSub = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptSub => ({ type: "optSub", left, right });
+export const optMul = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptMul => ({ type: "optMul", left, right });
+export const optDiv = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptDiv => ({ type: "optDiv", left, right });
+export const optExp = (left: Nodes.Expr, right: Nodes.Expr): Nodes.OptExp => ({ type: "optExp", left, right });

@@ -38,7 +38,11 @@ export declare namespace Nodes {
   type Program = { type: "program", stmtList: StmtList };
 
   type OptAdd = { type: "optAdd", left: Expr, right: Expr };
-  type Opt = OptAdd;
+  type OptSub = { type: "optSub", left: Expr, right: Expr };
+  type OptMul = { type: "optMul", left: Expr, right: Expr };
+  type OptDiv = { type: "optDiv", left: Expr, right: Expr };
+  type OptExp = { type: "optExp", left: Expr, right: Expr };
+  type Opt = OptAdd | OptSub | OptMul | OptDiv | OptExp;
 
   type Expr = Opt | Call | GetLocal | Number;
   type Stmt = Define | Expr | SetLocal;
@@ -55,7 +59,11 @@ export declare namespace Insns {
   type SetLocal = { type: "setLocal" };
 
   type OptAdd = { type: "optAdd" };
-  type Opt = OptAdd;
+  type OptSub = { type: "optSub" };
+  type OptMul = { type: "optMul" };
+  type OptDiv = { type: "optDiv" };
+  type OptExp = { type: "optExp" };
+  type Opt = OptAdd | OptSub | OptMul | OptDiv | OptExp;
 
   type Operation = Opt | Call | Define | GetLocal | SetLocal;
   type All = Operand | Operation | All[];

@@ -60,6 +60,14 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
       return value || (value === 0 ? 0 : NaN);
     case "optAdd":
       return interpreter(node.left) + interpreter(node.right);
+    case "optSub":
+      return interpreter(node.left) - interpreter(node.right);
+    case "optMul":
+      return interpreter(node.left) * interpreter(node.right);
+    case "optDiv":
+      return interpreter(node.left) / interpreter(node.right);
+    case "optExp":
+      return Math.pow(interpreter(node.left), interpreter(node.right));
   }
 };
 
