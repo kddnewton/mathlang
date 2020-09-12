@@ -23,6 +23,15 @@ Expressions looks like you would normally express math on paper. Here are some e
 - `7^8`
 - `(1 + 2) * 3`
 
+#### Implicit multiplication
+
+Writing a number and then a variable will imply multiplication, as in:
+
+```
+x = 2
+3x
+```
+
 ### Functions
 
 Functions are local to whatever context you're currently in (top-level or another function). They become defined wherever you define them and are not hoisted (so you can only call them after you've declared them, there are no forward-declarations). They support implicit returns, so whatever the final expression in your function body will be what is returned. Here is an example:
