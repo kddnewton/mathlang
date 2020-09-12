@@ -16,6 +16,8 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
       return `${indent}${formatter(node.left)}^${formatter(node.right)}`;
     case "getLocal":
       return `${indent}${node.name}`;
+    case "mod":
+      return `${indent}${formatter(node.left)} % ${formatter(node.right)}`;
     case "mul":
       return `${indent}${formatter(node.left)} * ${formatter(node.right)}`;
     case "number":

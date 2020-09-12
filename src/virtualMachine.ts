@@ -58,6 +58,9 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
         case "getLocal":
           stack.push(locals[stack.pop()]);
           break;
+        case "mod":
+          stack.push(stack.pop() % stack.pop());
+          break;
         case "mul":
           stack.push(stack.pop() * stack.pop());
           break;

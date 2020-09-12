@@ -9,6 +9,7 @@ const stdlib = {
   exp: (value: number, power: number) => Math.pow(value, power),
   ln: (value: number) => Math.log(value),
   log: (value: number) => Math.log10(value),
+  mod: (left: number, right: number) => left % right,
   mul: (left: number, right: number) => left * right,
   neg: (value: number) => value * -1,
   print: (value: number) => {

@@ -55,6 +55,7 @@ A couple of functions comes built-in to the runtime. Those include:
 - `exp(x, p)` - raise a number to a power
 - `ln(x)` - get the natural log of a number
 - `log(x)` - get the base10 log of a number
+- `mod(x, y)` - get a number modulo a base
 - `mul(x, y)` - multiply two numbers
 - `neg(x)` - negate a number
 - `sqrt(x)` - get the square root of a number

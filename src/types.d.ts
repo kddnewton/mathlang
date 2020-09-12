@@ -13,12 +13,13 @@ export declare namespace Tokens {
   type Times = { type: "times" };
   type Over = { type: "over" };
   type ToThe = { type: "tothe" };
+  type Mod = { type: "mod" };
 
   type Number = { type: "number", value: number };
   type Name = { type: "name", value: string };
 
   type Symbol = LParen | RParen | LBrace | RBrace | Comma | Equals;
-  type Operator = Plus | Minus | Times | Over | ToThe;
+  type Operator = Plus | Minus | Times | Over | ToThe | Mod;
   type All = NewLine | Symbol | Operator | Number | Name;
 }
 
@@ -42,8 +43,9 @@ export declare namespace Nodes {
   type Mul = { type: "mul", left: Expr, right: Expr };
   type Div = { type: "div", left: Expr, right: Expr };
   type Exp = { type: "exp", left: Expr, right: Expr };
+  type Mod = { type: "mod", left: Expr, right: Expr };
 
-  type Binary = Add | Sub | Mul | Div | Exp;
+  type Binary = Add | Sub | Mul | Div | Exp | Mod;
   type Expr = Binary | Call | GetLocal | Number;
   type Stmt = Define | Expr | SetLocal;
 
@@ -62,8 +64,9 @@ export declare namespace Insns {
   type Mul = { type: "mul" };
   type Div = { type: "div" };
   type Exp = { type: "exp" };
+  type Mod = { type: "mod" };
 
-  type Binary = Add | Sub | Mul | Div | Exp;
+  type Binary = Add | Sub | Mul | Div | Exp | Mod;
   type Operation = Binary | Call | Define | GetLocal | SetLocal;
   type All = Operand | Operation | All[];
 }

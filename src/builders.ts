@@ -18,3 +18,4 @@ export const sub = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Sub => ({ type: 
 export const mul = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Mul => ({ type: "mul", left, right });
 export const div = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Div => ({ type: "div", left, right });
 export const exp = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Exp => ({ type: "exp", left, right });
+export const mod = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Mod => ({ type: "mod", left, right });

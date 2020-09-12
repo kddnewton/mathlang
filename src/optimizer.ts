@@ -1,5 +1,5 @@
 import { Nodes } from "./types";
-import { add, call, define, div, exp, mul, number, program, setLocal, stmtList, sub } from "./builders";
+import { add, call, define, div, exp, mod, mul, number, program, setLocal, stmtList, sub } from "./builders";
 
 type Optimizer = Partial<{ [K in Nodes.All["type"]]: (node: Nodes.All & { type: K }) => Nodes.All | undefined }>;
 
@@ -21,6 +21,8 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
         return optimizeNode(div(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       case "exp":
         return optimizeNode(exp(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "mod":
+        return optimizeNode(mod(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       case "mul":
         return optimizeNode(mul(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       case "program":
@@ -39,7 +41,7 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
   return visitNode(node) as Nodes.Program;
 };
 
-type PotentialConstantBinaryExpression = Nodes.Add | Nodes.Sub | Nodes.Mul | Nodes.Div | Nodes.Exp;
+type PotentialConstantBinaryExpression = Nodes.Add | Nodes.Sub | Nodes.Mul | Nodes.Div | Nodes.Exp | Nodes.Mod;
 type ConstantBinaryExpression = {
   type: PotentialConstantBinaryExpression["type"],
   left: Nodes.Number,
@@ -64,6 +66,11 @@ const replaceConstantBinaryExpressions: Optimizer = {
   exp(node: Nodes.Exp) {
     if (isConstantBinaryExpression(node)) {
       return number(Math.pow(node.left.value, node.right.value));
+    }
+  },
+  mod(node: Nodes.Mod) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value % node.right.value);
     }
   },
   mul(node: Nodes.Mul) {

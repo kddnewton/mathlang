@@ -51,6 +51,8 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
       return Math.pow(interpreter(node.left), interpreter(node.right));
     case "getLocal":
       return context.locals[node.name];
+    case "mod":
+      return interpreter(node.left) % interpreter(node.right);
     case "mul":
       return interpreter(node.left) * interpreter(node.right);
     case "number":

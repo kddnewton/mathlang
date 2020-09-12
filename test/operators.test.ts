@@ -21,6 +21,10 @@ describe("operators", () => {
     expect(evaluate("3^2")).toEqual(9);
   });
 
+  test("%", () => {
+    expect(evaluate("12 % 5")).toEqual(2);
+  });
+
   test("precedence", () => {
     expect(evaluate("1 + 2 * 3^4")).toEqual(163);
   });

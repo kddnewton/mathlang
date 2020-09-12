@@ -17,6 +17,8 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       return compiler(node.right).concat(compiler(node.left)).concat({ type: "exp" });
     case "getLocal":
       return [node.name, { type: "getLocal" }];
+    case "mod":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "mod" });
     case "mul":
       return compiler(node.right).concat(compiler(node.left)).concat({ type: "mul" });
     case "number":

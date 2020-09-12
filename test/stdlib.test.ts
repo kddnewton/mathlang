@@ -36,4 +36,8 @@ describe("stdlib", () => {
   test("sqrt", () => {
     expect(evaluate("sqrt(9)")).toEqual(3);
   });
+
+  test("mod", () => {
+    expect(evaluate("mod(12, 5)")).toEqual(2);
+  });
 });

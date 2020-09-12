@@ -13,7 +13,8 @@ const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["type"] } = {
   "-": "minus",
   "*": "times",
   "/": "over",
-  "^": "tothe"
+  "^": "tothe",
+  "%": "mod"
 };
 
 function isMapped(char: keyof typeof mapped): char is keyof typeof mapped {

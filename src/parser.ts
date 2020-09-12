@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { add, call, define, div, exp, getLocal, mul, number, param, paramList, program, setLocal, stmtList, sub } from "./builders";
+import { add, call, define, div, exp, getLocal, mod, mul, number, param, paramList, program, setLocal, stmtList, sub } from "./builders";
 
 /**
  * Grammar:
@@ -14,7 +14,7 @@ import { add, call, define, div, exp, getLocal, mul, number, param, paramList, p
  * ParamList -> Name Comma ParamList | Name
  * SetLocal -> Name Equals Expr
  * Expr -> Term Plus Term | Term Minus Term | Term
- * Term -> Power Times Power | Power Over Power | Power
+ * Term -> Power Times Power | Power Over Power | Power Mod Power | Power
  * Power -> Value ToThe Power | Value
  * Value -> LParen Expr RParen | Call | GetLocal | Number
  * Call -> Name LParen RParen |  Name LParen ArgList RParen
@@ -56,6 +56,7 @@ const matchMinus = makeMatcher("minus");
 const matchTimes = makeMatcher("times");
 const matchOver = makeMatcher("over");
 const matchToThe = makeMatcher("tothe");
+const matchMod = makeMatcher("mod");
 
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
@@ -145,19 +146,36 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   };
 }
 
-// Term -> Power Times Power | Power Over Power | Power
+// Term -> Power Times Power | Power Over Power | Power Mod Power | Power
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumePower(tokens, current);
   if (!leftConsumed) {
     return null;
   }
 
-  if (!matchTimes(tokens, current + leftConsumed.size) && !matchOver(tokens, current + leftConsumed.size)) {
+  if (
+    !matchTimes(tokens, current + leftConsumed.size) &&
+    !matchOver(tokens, current + leftConsumed.size) &&
+    !matchMod(tokens, current + leftConsumed.size)
+  ) {
     return leftConsumed;
   }
 
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "times" ? mul : div;
+  const operator = tokens[current + leftConsumed.size] as Tokens.Operator;
+
+  let builder: (left: Nodes.Expr, right: Nodes.Expr) => Nodes.Expr;
+  switch (operator.type) {
+    case "times":
+      builder = mul;
+      break;
+    case "over":
+      builder = div;
+      break;
+    default:
+      builder = mod;
+      break;
+  }
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
