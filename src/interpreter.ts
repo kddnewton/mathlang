@@ -1,5 +1,5 @@
 import { Nodes } from "./types";
-import stdlib, { isStdLibFunc } from "./stdlib";
+import stdlib, { isStdLib } from "./stdlib";
 
 type Context = {
   funcs: { [key: string]: Nodes.Define },
@@ -16,7 +16,7 @@ const interpretCall = (node: Nodes.Call, context: Context) => {
     return node.args.map((arg) => interpreter(arg, context));
   };
 
-  if (isStdLibFunc(node.name)) {
+  if (isStdLib(node.name)) {
     const func = stdlib[node.name];
     return (func as any)(...getArgs(func.length));
   }
@@ -38,13 +38,21 @@ const interpretCall = (node: Nodes.Call, context: Context) => {
 // Evaluate a visitable AST node within a certain context
 const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {} }): number => {
   switch (node.type) {
+    case "add":
+      return interpreter(node.left) + interpreter(node.right);
     case "call":
       return interpretCall(node, context);
     case "define":
       context.funcs[node.name] = node;
       return NaN;
+    case "div":
+      return interpreter(node.left) / interpreter(node.right);
+    case "exp":
+      return Math.pow(interpreter(node.left), interpreter(node.right));
     case "getLocal":
       return context.locals[node.name];
+    case "mul":
+      return interpreter(node.left) * interpreter(node.right);
     case "number":
       return node.value;
     case "program":
@@ -58,16 +66,8 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
         value = interpreter(stmt, context)
       });
       return value || (value === 0 ? 0 : NaN);
-    case "optAdd":
-      return interpreter(node.left) + interpreter(node.right);
-    case "optSub":
+    case "sub":
       return interpreter(node.left) - interpreter(node.right);
-    case "optMul":
-      return interpreter(node.left) * interpreter(node.right);
-    case "optDiv":
-      return interpreter(node.left) / interpreter(node.right);
-    case "optExp":
-      return Math.pow(interpreter(node.left), interpreter(node.right));
   }
 };
 

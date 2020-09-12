@@ -43,15 +43,15 @@ f(x)
 
 A couple of functions comes built-in to the runtime. Those include:
 
-- `neg(x)` - negate a number
 - `add(x, y)` - add two numbers
-- `sub(x, y)` - subtract two numbers
-- `mul(x, y)` - multiply two numbers
 - `div(x, y)` - divide two numbers
 - `exp(x, p)` - raise a number to a power
-- `log(x)` - get the base10 log of a number
 - `ln(x)` - get the natural log of a number
+- `log(x)` - get the base10 log of a number
+- `mul(x, y)` - multiply two numbers
+- `neg(x)` - negate a number
 - `sqrt(x)` - get the square root of a number
+- `sub(x, y)` - subtract two numbers
 
 ### Local
 

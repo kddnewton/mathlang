@@ -3,31 +3,31 @@ import { Nodes } from "./types";
 // Output a node to readable code
 const formatter = (node: Nodes.All, indent: string = ""): string => {
   switch (node.type) {
-    case "number":
-      return `${indent}${node.value}`;
-    case "getLocal":
-      return `${indent}${node.name}`;
-    case "setLocal":
-      return `${indent}${node.name} = ${formatter(node.value)}`;
+    case "add":
+      return `${indent}${formatter(node.left)} + ${formatter(node.right)}`;
     case "call":
       return `${indent}${node.name}(${node.args.map((arg) => formatter(arg)).join(", ")})`;
     case "define":
       const params = node.paramList.params.map((param) => param.name).join(", ");
       return `${node.name}(${params}) {\n${formatter(node.stmtList, `${indent}  `)}\n}`;
+    case "div":
+      return `${indent}${formatter(node.left)} / ${formatter(node.right)}`;
+    case "exp":
+      return `${indent}${formatter(node.left)}^${formatter(node.right)}`;
+    case "getLocal":
+      return `${indent}${node.name}`;
+    case "mul":
+      return `${indent}${formatter(node.left)} * ${formatter(node.right)}`;
+    case "number":
+      return `${indent}${node.value}`;
+    case "setLocal":
+      return `${indent}${node.name} = ${formatter(node.value)}`;
     case "program":
       return formatter(node.stmtList);
     case "stmtList":
       return node.stmts.map((stmt) => formatter(stmt, indent)).join("\n");
-    case "optAdd":
-      return `${indent}${formatter(node.left)} + ${formatter(node.right)}`;
-    case "optSub":
+    case "sub":
       return `${indent}${formatter(node.left)} - ${formatter(node.right)}`;
-    case "optMul":
-      return `${indent}${formatter(node.left)} * ${formatter(node.right)}`;
-    case "optDiv":
-      return `${indent}${formatter(node.left)} / ${formatter(node.right)}`;
-    case "optExp":
-      return `${indent}${formatter(node.left)}^${formatter(node.right)}`;
   }
 };
 

@@ -1,36 +1,36 @@
 import { Nodes } from "./types";
-import { call, define, number, optAdd, optSub, optMul, optDiv, optExp, program, setLocal, stmtList } from "./builders";
+import { add, call, define, div, exp, mul, number, program, setLocal, stmtList, sub } from "./builders";
 
-type Visitor = Partial<{ [K in Nodes.All["type"]]: (node: Nodes.All & { type: K }) => Nodes.All | undefined }>;
+type Optimizer = Partial<{ [K in Nodes.All["type"]]: (node: Nodes.All & { type: K }) => Nodes.All | undefined }>;
 
-const visit = (node: Nodes.Program, visitor: Visitor): Nodes.Program => {
-  const visitNextNode = (node: Nodes.All): Nodes.All => {
-    const callback = visitor[node.type];
+const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
+  const optimizeNode = (node: Nodes.All): Nodes.All => {
+    const callback = optimizer[node.type];
     return callback ? ((callback as any)(node) || node) : node;
   };
 
   const visitNode = (node: Nodes.All): Nodes.All => {
     switch (node.type) {
+      case "add":
+        return optimizeNode(add(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       case "call":
-        return visitNextNode(call(node.name, node.args.map(visitNode) as Nodes.Expr[]));
+        return optimizeNode(call(node.name, node.args.map(visitNode) as Nodes.Expr[]));
       case "define":
-        return visitNextNode(define(node.name, node.paramList, visitNode(node.stmtList) as Nodes.StmtList));
-      case "optAdd":
-        return visitNextNode(optAdd(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
-      case "optSub":
-        return visitNextNode(optSub(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
-      case "optMul":
-        return visitNextNode(optMul(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
-      case "optDiv":
-        return visitNextNode(optDiv(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
-      case "optExp":
-        return visitNextNode(optExp(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(define(node.name, node.paramList, visitNode(node.stmtList) as Nodes.StmtList));
+      case "div":
+        return optimizeNode(div(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "exp":
+        return optimizeNode(exp(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "mul":
+        return optimizeNode(mul(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       case "program":
-        return visitNextNode(program(visitNode(node.stmtList) as Nodes.StmtList));
+        return optimizeNode(program(visitNode(node.stmtList) as Nodes.StmtList));
       case "setLocal":
-        return visitNextNode(setLocal(node.name, visitNode(node.value) as Nodes.Expr));
+        return optimizeNode(setLocal(node.name, visitNode(node.value) as Nodes.Expr));
       case "stmtList":
-        return visitNextNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
+        return optimizeNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
+      case "sub":
+        return optimizeNode(sub(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
       default:
         return node;
     }
@@ -39,7 +39,7 @@ const visit = (node: Nodes.Program, visitor: Visitor): Nodes.Program => {
   return visitNode(node) as Nodes.Program;
 };
 
-type PotentialConstantBinaryExpression = Nodes.OptAdd | Nodes.OptSub | Nodes.OptMul | Nodes.OptDiv | Nodes.OptExp;
+type PotentialConstantBinaryExpression = Nodes.Add | Nodes.Sub | Nodes.Mul | Nodes.Div | Nodes.Exp;
 type ConstantBinaryExpression = {
   type: PotentialConstantBinaryExpression["type"],
   left: Nodes.Number,
@@ -50,34 +50,34 @@ function isConstantBinaryExpression(node: PotentialConstantBinaryExpression): no
   return node.left.type === "number" && node.right.type === "number";
 }
 
-const replaceConstantExpressions: Visitor = {
-  optAdd(node: Nodes.OptAdd) {
+const replaceConstantBinaryExpressions: Optimizer = {
+  add(node: Nodes.Add) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value + node.right.value)
+      return number(node.left.value + node.right.value);
     }
   },
-  optSub(node: Nodes.OptSub) {
-    if (isConstantBinaryExpression(node)) {
-      return number(node.left.value - node.right.value);
-    }
-  },
-  optMul(node: Nodes.OptMul) {
-    if (isConstantBinaryExpression(node)) {
-      return number(node.left.value * node.right.value);
-    }
-  },
-  optDiv(node: Nodes.OptDiv) {
+  div(node: Nodes.Div) {
     if (isConstantBinaryExpression(node)) {
       return number(node.left.value / node.right.value);
     }
   },
-  optExp(node: Nodes.OptExp) {
+  exp(node: Nodes.Exp) {
     if (isConstantBinaryExpression(node)) {
       return number(Math.pow(node.left.value, node.right.value));
+    }
+  },
+  mul(node: Nodes.Mul) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value * node.right.value);
+    }
+  },
+  sub(node: Nodes.Sub) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value - node.right.value);
     }
   }
 };
 
-const optimizer = (node: Nodes.Program) => visit(node, replaceConstantExpressions);
+const optimizer = (node: Nodes.Program) => optimize(node, replaceConstantBinaryExpressions);
 
 export default optimizer;

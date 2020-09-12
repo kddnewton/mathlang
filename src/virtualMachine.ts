@@ -1,17 +1,20 @@
 import { Insns } from "./types";
-import stdlib, { isStdLibFunc } from "./stdlib";
+import stdlib, { isStdLib } from "./stdlib";
 
 function isOperation(object: Insns.All): object is Insns.Operation {
   return Object.prototype.hasOwnProperty.call(object, "type");
 }
 
-const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): number => {
+const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = {}): number => {
   const funcs: { [key: string]: (...args: number[]) => number } = {};
   const stack: any[] = [];
 
   insns.forEach((insn) => {
     if (isOperation(insn)) {
       switch (insn.type) {
+        case "add":
+          stack.push(stack.pop() + stack.pop());
+          break;
         case "call": {
           const name = stack.pop();
           const args = [];
@@ -21,7 +24,7 @@ const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): nu
             args.push(stack.pop());
           }
 
-          const callback = isStdLibFunc(name) ? stdlib[name] : funcs[name];
+          const callback = isStdLib(name) ? stdlib[name] : funcs[name];
           stack.push(callback(...args));
           break;
         }
@@ -41,33 +44,28 @@ const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): nu
               nextLocals[param] = args[index];
             });
 
-            return machine(childInsns, nextLocals);
+            return virtualMachine(childInsns, nextLocals);
           };
 
           break;
         }
+        case "div":
+          stack.push(stack.pop() / stack.pop());
+          break;
+        case "exp":
+          stack.push(Math.pow(stack.pop(), stack.pop()));
+          break;
         case "getLocal":
           stack.push(locals[stack.pop()]);
           break;
-        case "setLocal": {
-          const name = stack.pop();
-          locals[name] = stack.pop();
-          break;
-        }
-        case "optAdd":
-          stack.push(stack.pop() + stack.pop());
-          break;
-        case "optSub":
-          stack.push(stack.pop() - stack.pop());
-          break;
-        case "optMul":
+        case "mul":
           stack.push(stack.pop() * stack.pop());
           break;
-        case "optDiv":
-          stack.push(stack.pop() / stack.pop());
+        case "setLocal":
+          locals[stack.pop()] = stack.pop();
           break;
-        case "optExp":
-          stack.push(Math.pow(stack.pop(), stack.pop()));
+        case "sub":
+          stack.push(stack.pop() - stack.pop());
           break;
       }
     } else {
@@ -78,4 +76,4 @@ const machine = (insns: Insns.All[], locals: { [key: string]: number } = {}): nu
   return stack[stack.length - 1];
 };
 
-export default machine;
+export default virtualMachine;

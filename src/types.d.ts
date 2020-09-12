@@ -37,14 +37,14 @@ export declare namespace Nodes {
   type StmtList = { type: "stmtList", stmts: Stmt[] };
   type Program = { type: "program", stmtList: StmtList };
 
-  type OptAdd = { type: "optAdd", left: Expr, right: Expr };
-  type OptSub = { type: "optSub", left: Expr, right: Expr };
-  type OptMul = { type: "optMul", left: Expr, right: Expr };
-  type OptDiv = { type: "optDiv", left: Expr, right: Expr };
-  type OptExp = { type: "optExp", left: Expr, right: Expr };
-  type Opt = OptAdd | OptSub | OptMul | OptDiv | OptExp;
+  type Add = { type: "add", left: Expr, right: Expr };
+  type Sub = { type: "sub", left: Expr, right: Expr };
+  type Mul = { type: "mul", left: Expr, right: Expr };
+  type Div = { type: "div", left: Expr, right: Expr };
+  type Exp = { type: "exp", left: Expr, right: Expr };
 
-  type Expr = Opt | Call | GetLocal | Number;
+  type Binary = Add | Sub | Mul | Div | Exp;
+  type Expr = Binary | Call | GetLocal | Number;
   type Stmt = Define | Expr | SetLocal;
 
   type All = Stmt | StmtList | Program;
@@ -57,14 +57,13 @@ export declare namespace Insns {
   type Define = { type: "define" };
   type GetLocal = { type: "getLocal" };
   type SetLocal = { type: "setLocal" };
+  type Add = { type: "add" };
+  type Sub = { type: "sub" };
+  type Mul = { type: "mul" };
+  type Div = { type: "div" };
+  type Exp = { type: "exp" };
 
-  type OptAdd = { type: "optAdd" };
-  type OptSub = { type: "optSub" };
-  type OptMul = { type: "optMul" };
-  type OptDiv = { type: "optDiv" };
-  type OptExp = { type: "optExp" };
-  type Opt = OptAdd | OptSub | OptMul | OptDiv | OptExp;
-
-  type Operation = Opt | Call | Define | GetLocal | SetLocal;
+  type Binary = Add | Sub | Mul | Div | Exp;
+  type Operation = Binary | Call | Define | GetLocal | SetLocal;
   type All = Operand | Operation | All[];
 }

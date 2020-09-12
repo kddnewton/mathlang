@@ -1,8 +1,5 @@
 const stdlib = {
-  neg: (value: number) => value * -1,
   add: (left: number, right: number) => left + right,
-  sub: (left: number, right: number) => left - right,
-  mul: (left: number, right: number) => left * right,
   div: (left: number, right: number) => {
     if (right === 0) {
       throw new Error("Division by 0");
@@ -10,12 +7,15 @@ const stdlib = {
     return left / right;
   },
   exp: (value: number, power: number) => Math.pow(value, power),
-  log: (value: number) => Math.log10(value),
   ln: (value: number) => Math.log(value),
-  sqrt: (value: number) => Math.sqrt(value)
+  log: (value: number) => Math.log10(value),
+  mul: (left: number, right: number) => left * right,
+  neg: (value: number) => value * -1,
+  sqrt: (value: number) => Math.sqrt(value),
+  sub: (left: number, right: number) => left - right
 };
 
-export function isStdLibFunc(key: string): key is keyof typeof stdlib {
+export function isStdLib(key: string): key is keyof typeof stdlib {
   return key in stdlib;
 }
 
