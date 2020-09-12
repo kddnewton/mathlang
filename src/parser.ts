@@ -16,7 +16,7 @@ import { add, call, define, div, exp, getLocal, mod, mul, number, param, paramLi
  * Expr -> Term Plus Term | Term Minus Term | Term
  * Term -> Power Times Power | Power Over Power | Power Mod Power | Power
  * Power -> Value ToThe Power | Value
- * Value -> LParen Expr RParen | Call | GetLocal | Number
+ * Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
  * Call -> Name LParen RParen |  Name LParen ArgList RParen
  * ArgList -> Expr Comma ArgList | Expr
  * GetLocal -> Name
@@ -111,7 +111,7 @@ function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call
   };
 }
 
-// Value -> LParen Expr RParen | Call | GetLocal | Number
+// Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   if (matchLParen(tokens, current)) {
     const consumed = consumeExpr(tokens, current + 1);
@@ -119,6 +119,13 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     if (consumed && matchRParen(tokens, current + 1 + consumed.size)) {
       return { node: consumed.node, size: consumed.size + 2 };
     }
+  }
+
+  if (matchNumber(tokens, current) && matchName(tokens, current + 1)) {
+    return {
+      node: mul(number((tokens[current] as Tokens.Number).value), getLocal((tokens[current + 1] as Tokens.Name).value)),
+      size: 2
+    };
   }
 
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);

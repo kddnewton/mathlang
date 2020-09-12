@@ -28,4 +28,13 @@ describe("operators", () => {
   test("precedence", () => {
     expect(evaluate("1 + 2 * 3^4")).toEqual(163);
   });
+
+  test("implicit multiplication", () => {
+    const source = `
+      x = 2
+      3x
+    `;
+
+    expect(evaluate(source)).toEqual(6);
+  });
 });

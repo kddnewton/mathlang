@@ -53,7 +53,7 @@ const tokenizer = (source: string) => {
     if (numbers.test(char)) {
       let chars = "";
 
-      while (numbers.test(char)) {
+      while (char && numbers.test(char)) {
         chars += char;
         char = input[++current];
       }
@@ -65,7 +65,7 @@ const tokenizer = (source: string) => {
     if (letters.test(char)) {
       let chars = "";
 
-      while (letters.test(char)) {
+      while (char && letters.test(char)) {
         chars += char;
         char = input[++current];
       }
