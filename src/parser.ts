@@ -7,8 +7,8 @@ import { add, call, define, div, exp, getLocal, mul, number, param, paramList, p
  * Program -> StmtList
  * StmtList -> Stmt NewLine StmtList | Stmt
  * Stmt -> Define | SetLocal | Expr
- * Define -> Name LParen RParen LBrace NewLine StmtList RBrace
- *   | Name LParen ParamList RParen LBrace NewLine StmtList RBrace
+ * Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
+ *   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
  * ParamList -> Name Comma ParamList | Name
  * SetLocal -> Name Equals Expr
  * Expr -> Term Plus Term | Term Minus Term | Term
@@ -201,8 +201,8 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
   };
 }
 
-// Define -> Name LParen RParen LBrace NewLine StmtList RBrace
-//   | Name LParen ParamList RParen LBrace NewLine StmtList RBrace
+// Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
+//   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
   if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
     return null;
@@ -213,21 +213,22 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
 
   if (
     !matchRParen(tokens, current + 2 + paramsSize) ||
-    !matchLBrace(tokens, current + 3 + paramsSize) ||
-    !matchNewLine(tokens, current + 4 + paramsSize)
+    !matchEquals(tokens, current + 3 + paramsSize) ||
+    !matchLBrace(tokens, current + 4 + paramsSize) ||
+    !matchNewLine(tokens, current + 5 + paramsSize)
   ) {
     return null;
   }
 
-  const body = consume(consumeStmtList, tokens, current + 5 + paramsSize);
+  const body = consume(consumeStmtList, tokens, current + 6 + paramsSize);
 
-  if (!matchRBrace(tokens, current + 5 + paramsSize + body.size)) {
+  if (!matchRBrace(tokens, current + 6 + paramsSize + body.size)) {
     return null;
   }
 
   return {
     node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), body.node),
-    size: paramsSize + body.size + 6
+    size: paramsSize + body.size + 7
   };
 }
 

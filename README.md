@@ -28,7 +28,7 @@ Expressions looks like you would normally express math on paper. Here are some e
 Functions are local to whatever context you're currently in (top-level or another function). They become defined wherever you define them and are not hoisted (so you can only call them after you've declared them, there are no forward-declarations). They suppose implicit returns, so whatever the final expression in your function body will be what is returned. Here is an example:
 
 ```
-f(x) {
+f(x) = {
   x * 3
 }
 ```

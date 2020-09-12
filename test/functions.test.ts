@@ -3,7 +3,7 @@ import { evaluate } from "../src";
 describe("functions", () => {
   test("user-defined", () => {
     const source = `
-      double(x) {
+      double(x) = {
         x * 2
       }
       double(2)
@@ -14,9 +14,9 @@ describe("functions", () => {
 
   test("nested scope", () => {
     const source = `
-      f(x) {
-        f(x) {
-          f(x) {
+      f(x) = {
+        f(x) = {
+          f(x) = {
             x * 2
           }
           f(x)
