@@ -11,6 +11,10 @@ const stdlib = {
   log: (value: number) => Math.log10(value),
   mul: (left: number, right: number) => left * right,
   neg: (value: number) => value * -1,
+  print: (value: number) => {
+    console.log(value);
+    return value;
+  },
   sqrt: (value: number) => Math.sqrt(value),
   sub: (left: number, right: number) => left - right
 };
