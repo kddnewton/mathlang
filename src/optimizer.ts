@@ -1,70 +1,83 @@
 import { Nodes } from "./types";
 import { call, define, number, optAdd, optSub, optMul, optDiv, optExp, program, setLocal, stmtList } from "./builders";
 
-const isOptimizable = (left: Nodes.Expr, right: Nodes.Expr) => (
-  left.type === "number" && right.type === "number"
-);
+type Visitor = Partial<{ [K in Nodes.All["type"]]: (node: Nodes.All & { type: K }) => Nodes.All | undefined }>;
 
-const optimizer = (node: Nodes.All): Nodes.All => {
-  switch (node.type) {
-    case "call":
-      return call(node.name, node.args.map(optimizer) as Nodes.Expr[]);
-    case "define":
-      return define(node.name, node.paramList, optimizer(node.stmtList) as Nodes.StmtList);
-    case "program":
-      return program(optimizer(node.stmtList) as Nodes.StmtList);
-    case "setLocal":
-      return setLocal(node.name, optimizer(node.value) as Nodes.Expr);
-    case "stmtList":
-      return stmtList(node.stmts.map(optimizer) as Nodes.Stmt[]);
-    case "optAdd": {
-      const optLeft = optimizer(node.left) as Nodes.Expr;
-      const optRight = optimizer(node.right) as Nodes.Expr;
+const visit = (node: Nodes.Program, visitor: Visitor): Nodes.Program => {
+  const visitNextNode = (node: Nodes.All): Nodes.All => {
+    const callback = visitor[node.type];
+    return callback ? ((callback as any)(node) || node) : node;
+  };
 
-      if (isOptimizable(optLeft, optRight)) {
-        return number((node.left as Nodes.Number).value + (node.right as Nodes.Number).value);
-      }
-      return optAdd(optLeft, optRight);
+  const visitNode = (node: Nodes.All): Nodes.All => {
+    switch (node.type) {
+      case "call":
+        return visitNextNode(call(node.name, node.args.map(visitNode) as Nodes.Expr[]));
+      case "define":
+        return visitNextNode(define(node.name, node.paramList, visitNode(node.stmtList) as Nodes.StmtList));
+      case "optAdd":
+        return visitNextNode(optAdd(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "optSub":
+        return visitNextNode(optSub(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "optMul":
+        return visitNextNode(optMul(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "optDiv":
+        return visitNextNode(optDiv(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "optExp":
+        return visitNextNode(optExp(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+      case "program":
+        return visitNextNode(program(visitNode(node.stmtList) as Nodes.StmtList));
+      case "setLocal":
+        return visitNextNode(setLocal(node.name, visitNode(node.value) as Nodes.Expr));
+      case "stmtList":
+        return visitNextNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
+      default:
+        return node;
     }
-    case "optSub":{
-      const optLeft = optimizer(node.left) as Nodes.Expr;
-      const optRight = optimizer(node.right) as Nodes.Expr;
+  }
 
-      if (isOptimizable(optLeft, optRight)) {
-        return number((node.left as Nodes.Number).value - (node.right as Nodes.Number).value);
-      }
-      return optSub(optLeft, optRight);
-    }
-    case "optMul":{
-      const optLeft = optimizer(node.left) as Nodes.Expr;
-      const optRight = optimizer(node.right) as Nodes.Expr;
+  return visitNode(node) as Nodes.Program;
+};
 
-      if (isOptimizable(optLeft, optRight)) {
-        return number((node.left as Nodes.Number).value * (node.right as Nodes.Number).value);
-      }
-      return optMul(optLeft, optRight);
-    }
-    case "optDiv":{
-      const optLeft = optimizer(node.left) as Nodes.Expr;
-      const optRight = optimizer(node.right) as Nodes.Expr;
+type PotentialConstantBinaryExpression = Nodes.OptAdd | Nodes.OptSub | Nodes.OptMul | Nodes.OptDiv | Nodes.OptExp;
+type ConstantBinaryExpression = {
+  type: PotentialConstantBinaryExpression["type"],
+  left: Nodes.Number,
+  right: Nodes.Number
+};
 
-      if (isOptimizable(optLeft, optRight)) {
-        return number((node.left as Nodes.Number).value / (node.right as Nodes.Number).value);
-      }
-      return optDiv(optLeft, optRight);
-    }
-    case "optExp":{
-      const optLeft = optimizer(node.left) as Nodes.Expr;
-      const optRight = optimizer(node.right) as Nodes.Expr;
+function isConstantBinaryExpression(node: PotentialConstantBinaryExpression): node is ConstantBinaryExpression {
+  return node.left.type === "number" && node.right.type === "number";
+}
 
-      if (isOptimizable(optLeft, optRight)) {
-        return number(Math.pow((node.left as Nodes.Number).value, (node.right as Nodes.Number).value));
-      }
-      return optExp(optLeft, optRight);
+const replaceConstantExpressions: Visitor = {
+  optAdd(node: Nodes.OptAdd) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value + node.right.value)
     }
-    default:
-      return node;
+  },
+  optSub(node: Nodes.OptSub) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value - node.right.value);
+    }
+  },
+  optMul(node: Nodes.OptMul) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value * node.right.value);
+    }
+  },
+  optDiv(node: Nodes.OptDiv) {
+    if (isConstantBinaryExpression(node)) {
+      return number(node.left.value / node.right.value);
+    }
+  },
+  optExp(node: Nodes.OptExp) {
+    if (isConstantBinaryExpression(node)) {
+      return number(Math.pow(node.left.value, node.right.value));
+    }
   }
 };
+
+const optimizer = (node: Nodes.Program) => visit(node, replaceConstantExpressions);
 
 export default optimizer;

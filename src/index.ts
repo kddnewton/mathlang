@@ -10,6 +10,11 @@ export const evaluate = (source: string) => (
   machine(compiler(optimizer(parser(tokenizer(source)))))
 );
 
-export const format = (source: string) => (
-  formatter(parser(tokenizer(source)))
-);
+export const format = (source: string, { optimize }: { optimize?: boolean } = {}) => {
+  let node = parser(tokenizer(source));
+  if (optimize) {
+    node = optimizer(node)
+  }
+
+  return formatter(node);
+};
