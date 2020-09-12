@@ -12,6 +12,15 @@ describe("functions", () => {
     expect(evaluate(source)).toEqual(4);
   });
 
+  test("inline", () => {
+    const source = `
+      double(x) = x * 2
+      double(2)
+    `;
+
+    expect(evaluate(source)).toEqual(4);
+  });
+
   test("nested scope", () => {
     const source = `
       f(x) = {

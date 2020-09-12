@@ -9,6 +9,8 @@ import { add, call, define, div, exp, getLocal, mul, number, param, paramList, p
  * Stmt -> Define | SetLocal | Expr
  * Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
  *   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
+ *   | Name LParen ParamList RParen Equals Stmt
+ *   | Name LParen RParen Equals Stmt
  * ParamList -> Name Comma ParamList | Name
  * SetLocal -> Name Equals Expr
  * Expr -> Term Plus Term | Term Minus Term | Term
@@ -203,6 +205,8 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
 
 // Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
 //   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
+//   | Name LParen ParamList RParen Equals Stmt
+//   | Name LParen RParen Equals Stmt
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
   if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
     return null;
@@ -211,24 +215,30 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
   const params = consumeParamList(tokens, current + 2);
   const paramsSize = params ? params.size : 0;
 
-  if (
-    !matchRParen(tokens, current + 2 + paramsSize) ||
-    !matchEquals(tokens, current + 3 + paramsSize) ||
-    !matchLBrace(tokens, current + 4 + paramsSize) ||
-    !matchNewLine(tokens, current + 5 + paramsSize)
-  ) {
+  if (!matchRParen(tokens, current + 2 + paramsSize) || !matchEquals(tokens, current + 3 + paramsSize)) {
     return null;
   }
 
-  const body = consume(consumeStmtList, tokens, current + 6 + paramsSize);
+  if (matchLBrace(tokens, current + 4 + paramsSize)) {
+    if (!matchNewLine(tokens, current + 5 + paramsSize)) {
+      return null;
+    }
 
-  if (!matchRBrace(tokens, current + 6 + paramsSize + body.size)) {
-    return null;
+    const body = consume(consumeStmtList, tokens, current + 6 + paramsSize);
+    if (!matchRBrace(tokens, current + 6 + paramsSize + body.size)) {
+      return null;
+    }
+  
+    return {
+      node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), body.node),
+      size: paramsSize + body.size + 7
+    };
   }
 
+  const body = consume(consumeStmt, tokens, current + 4 + paramsSize);
   return {
-    node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), body.node),
-    size: paramsSize + body.size + 7
+    node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), stmtList([body.node])),
+    size: paramsSize + body.size + 4
   };
 }
 
