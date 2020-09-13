@@ -3,18 +3,18 @@ import { Tokens } from "./types";
 const numbers = /[0-9]/;
 const letters = /[a-z]/i;
 const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["type"] } = {
-  "(": "lparen",
-  ")": "rparen",
-  "{": "lbrace",
-  "}": "rbrace",
   ",": "comma",
   "=": "equals",
-  "+": "plus",
+  "{": "lbrace",
+  "(": "lparen",
   "-": "minus",
-  "*": "times",
+  "%": "mod",
   "/": "over",
-  "^": "tothe",
-  "%": "mod"
+  "+": "plus",
+  "}": "rbrace",
+  ")": "rparen",
+  "*": "times",
+  "^": "tothe"
 };
 
 function isMapped(char: keyof typeof mapped): char is keyof typeof mapped {
