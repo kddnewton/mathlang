@@ -45,15 +45,15 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
     case "define":
       context.funcs[node.name] = node;
       return NaN;
-    case "div":
+    case "divide":
       return interpreter(node.left) / interpreter(node.right);
-    case "exp":
+    case "exponentiate":
       return Math.pow(interpreter(node.left), interpreter(node.right));
     case "getLocal":
       return context.locals[node.name];
-    case "mod":
+    case "modulo":
       return interpreter(node.left) % interpreter(node.right);
-    case "mul":
+    case "multiply":
       return interpreter(node.left) * interpreter(node.right);
     case "number":
       return node.value;
@@ -68,7 +68,7 @@ const interpreter = (node: Nodes.All, context: Context = { funcs: {}, locals: {}
         value = interpreter(stmt, context)
       });
       return value || (value === 0 ? 0 : NaN);
-    case "sub":
+    case "subtract":
       return interpreter(node.left) - interpreter(node.right);
   }
 };

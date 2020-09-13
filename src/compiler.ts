@@ -11,16 +11,16 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       insns = insns.concat(node.paramList.params.reverse().map((param) => param.name));
       return insns.concat(node.paramList.params.length, node.name, { type: "define" });
     }
-    case "div":
-      return compiler(node.right).concat(compiler(node.left)).concat({ type: "div" });
-    case "exp":
-      return compiler(node.right).concat(compiler(node.left)).concat({ type: "exp" });
+    case "divide":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "divide" });
+    case "exponentiate":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "exponentiate" });
     case "getLocal":
       return [node.name, { type: "getLocal" }];
-    case "mod":
-      return compiler(node.right).concat(compiler(node.left)).concat({ type: "mod" });
-    case "mul":
-      return compiler(node.right).concat(compiler(node.left)).concat({ type: "mul" });
+    case "modulo":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "modulo" });
+    case "multiply":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "multiply" });
     case "number":
       return [node.value];
     case "program":
@@ -29,8 +29,8 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       return compiler(node.value).concat(node.name, { type: "setLocal" });
     case "stmtList":
       return node.stmts.flatMap(compiler);
-    case "sub":
-      return compiler(node.right).concat(compiler(node.left)).concat({ type: "sub" });
+    case "subtract":
+      return compiler(node.right).concat(compiler(node.left)).concat({ type: "subtract" });
   }
 };
 

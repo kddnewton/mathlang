@@ -10,15 +10,15 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
     case "define":
       const params = node.paramList.params.map((param) => param.name).join(", ");
       return `${node.name}(${params}) {\n${formatter(node.stmtList, `${indent}  `)}\n}`;
-    case "div":
+    case "divide":
       return `${indent}${formatter(node.left)} / ${formatter(node.right)}`;
-    case "exp":
+    case "exponentiate":
       return `${indent}${formatter(node.left)}^${formatter(node.right)}`;
     case "getLocal":
       return `${indent}${node.name}`;
-    case "mod":
+    case "modulo":
       return `${indent}${formatter(node.left)} % ${formatter(node.right)}`;
-    case "mul":
+    case "multiply":
       return `${indent}${formatter(node.left)} * ${formatter(node.right)}`;
     case "number":
       return `${indent}${node.value}`;
@@ -28,7 +28,7 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
       return formatter(node.stmtList);
     case "stmtList":
       return node.stmts.map((stmt) => formatter(stmt, indent)).join("\n");
-    case "sub":
+    case "subtract":
       return `${indent}${formatter(node.left)} - ${formatter(node.right)}`;
   }
 };

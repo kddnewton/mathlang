@@ -49,25 +49,25 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
 
           break;
         }
-        case "div":
+        case "divide":
           stack.push(stack.pop() / stack.pop());
           break;
-        case "exp":
+        case "exponentiate":
           stack.push(Math.pow(stack.pop(), stack.pop()));
           break;
         case "getLocal":
           stack.push(locals[stack.pop()]);
           break;
-        case "mod":
+        case "modulo":
           stack.push(stack.pop() % stack.pop());
           break;
-        case "mul":
+        case "multiply":
           stack.push(stack.pop() * stack.pop());
           break;
         case "setLocal":
           locals[stack.pop()] = stack.pop();
           break;
-        case "sub":
+        case "subtract":
           stack.push(stack.pop() - stack.pop());
           break;
       }

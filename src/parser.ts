@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { add, call, define, div, exp, getLocal, mod, mul, number, param, paramList, program, setLocal, stmtList, sub } from "./builders";
+import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, number, param, paramList, program, setLocal, stmtList, subtract } from "./builders";
 
 /**
  * Grammar:
@@ -122,10 +122,12 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   }
 
   if (matchNumber(tokens, current) && matchName(tokens, current + 1)) {
-    return {
-      node: mul(number((tokens[current] as Tokens.Number).value), getLocal((tokens[current + 1] as Tokens.Name).value)),
-      size: 2
-    };
+    const node = multiply(
+      number((tokens[current] as Tokens.Number).value),
+      getLocal((tokens[current + 1] as Tokens.Name).value)
+    );
+
+    return { node, size: 2 };
   }
 
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
@@ -148,7 +150,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   }
 
   return {
-    node: exp(leftConsumed.node, rightConsumed.node),
+    node: exponentiate(leftConsumed.node, rightConsumed.node),
     size: leftConsumed.size + 1 + rightConsumed.size
   };
 }
@@ -174,13 +176,13 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   let builder: (left: Nodes.Expr, right: Nodes.Expr) => Nodes.Expr;
   switch (operator.type) {
     case "times":
-      builder = mul;
+      builder = multiply;
       break;
     case "over":
-      builder = div;
+      builder = divide;
       break;
     default:
-      builder = mod;
+      builder = modulo;
       break;
   }
 
@@ -202,7 +204,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? add : sub;
+  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? add : subtract;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
