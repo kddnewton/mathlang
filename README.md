@@ -1,6 +1,6 @@
 # mathlang
 
-A small language I'm writing to learn more about compilers/interpreters/virtual machines/optimizers/type checkers/etc. without using dependencies.
+A small language I'm writing to learn more about compilers/virtual machines/optimizers/type checkers/etc. without using dependencies.
 
 ## Syntax
 
