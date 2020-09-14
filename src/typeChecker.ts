@@ -31,9 +31,45 @@ class Graph<T> {
 
 type FuncType = { params: Nodes.Meta[], returns: Nodes.Meta } & Nodes.Meta;
 
-const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
-  const graph = new Graph<Nodes.Meta>();
+const binaryContextVisitor = {
+  enter(node: Nodes.Binary) {
+    node.left.meta.context = node.meta.context;
+    node.right.meta.context = node.meta.context;
+  }
+};
 
+const contextVisitor: Visitor = {
+  add: binaryContextVisitor,
+  call: {
+    enter(node) {
+      node.args.forEach((arg) => {
+        arg.meta.context = node.meta.context;
+      });
+    }
+  },
+  divide: binaryContextVisitor,
+  exponentiate: binaryContextVisitor,
+  modulo: binaryContextVisitor,
+  multiply: binaryContextVisitor,
+  setLocal: {
+    enter(node) {
+      node.value.meta.context = node.meta.context;
+    }
+  },
+  stmtList: {
+    enter(node) {
+      node.meta.locals = {} as { [key: string]: Nodes.Meta };
+      node.meta.funcs = {} as { [key: string]: Nodes.Meta };
+
+      node.stmts.forEach((stmt) => {
+        stmt.meta.context = node.meta;
+      });
+    }
+  },
+  subtract: binaryContextVisitor
+};
+
+const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
   const makeFunc = (paramTypes: string[], returnType: string): FuncType => {
     const meta: FuncType = { kind: "Function", params: [], returns: { kind: returnType } };
     graph.add(meta);
@@ -70,9 +106,6 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
     enter(node: Nodes.Binary) {
       graph.add(node.meta);
       node.meta.kind = "Open";
-
-      node.left.meta.context = node.meta.context;
-      node.right.meta.context = node.meta.context;
     },
     exit(node: Nodes.Binary) {
       const func = stdlib[name];
@@ -83,16 +116,12 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
     }
   });
 
-  const visitor: Visitor = {
+  const graphVisitor: Visitor = {
     add: binary("add"),
     call: {
       enter(node) {
         graph.add(node.meta);
         node.meta.kind = "Open";
-
-        node.args.forEach((arg) => {
-          arg.meta.context = node.meta.context;
-        });
       },
       exit(node) {
         const func: FuncType = isStdLib(node.name) ? stdlib[node.name] : node.meta.context.funcs[node.name];
@@ -143,8 +172,6 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
 
         graph.add(node.meta);
         node.meta.kind = "Open";
-
-        node.value.meta.context = node.meta.context;
       },
       exit(node) {
         graph.connect(node.value.meta, node.meta);
@@ -155,13 +182,6 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
       enter(node) {
         graph.add(node.meta);
         node.meta.kind = "Open";
-
-        node.meta.locals = {} as { [key: string]: Nodes.Meta };
-        node.meta.funcs = {} as { [key: string]: Nodes.Meta };
-
-        node.stmts.forEach((stmt) => {
-          stmt.meta.context = node.meta;
-        });
       },
       exit(node) {
         graph.connect(node.stmts[node.stmts.length - 1].meta, node.meta);
@@ -170,7 +190,15 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
     subtract: binary("subtract")
   };
 
-  visit(node, visitor);
+  return graphVisitor;
+};
+
+const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
+  const graph = new Graph<Nodes.Meta>();
+
+  visit(node, contextVisitor);
+  visit(node, makeGraphVisitor(graph));
+
   return graph;
 };
 

@@ -1,44 +1,45 @@
 import { Nodes } from "./types";
 import { add, call, define, divide, exponentiate, modulo, multiply, number, program, setLocal, stmtList, subtract } from "./builders";
 
-type Optimizer = Partial<{ [K in Nodes.All["type"]]: (node: Nodes.All & { type: K }) => Nodes.All | undefined }>;
+type Optimizer = Partial<{ [T in Nodes.All["type"]]: (node: Nodes.All & { type: T }) => Nodes.All | undefined }>;
 
 const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
-  const optimizeNode = (node: Nodes.All): Nodes.All => {
+  const optimizeNode = <T extends Nodes.All>(node: Nodes.All): T => {
     const callback = optimizer[node.type];
     return callback ? ((callback as any)(node) || node) : node;
   };
 
-  const visitNode = (node: Nodes.All): Nodes.All => {
+  const visitNode = <T extends Nodes.All>(node: Nodes.All): T => {
     switch (node.type) {
       case "add":
-        return optimizeNode(add(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(add(visitNode(node.left), visitNode(node.right)));
       case "call":
-        return optimizeNode(call(node.name, node.args.map(visitNode) as Nodes.Expr[]));
+        return optimizeNode(call(node.name, node.args.map((arg) => visitNode(arg))));
       case "define":
-        return optimizeNode(define(node.name, node.paramList, visitNode(node.stmtList) as Nodes.StmtList));
+        return optimizeNode(define(node.name, node.paramList, visitNode(node.stmtList)));
       case "divide":
-        return optimizeNode(divide(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(divide(visitNode(node.left), visitNode(node.right)));
       case "exponentiate":
-        return optimizeNode(exponentiate(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(exponentiate(visitNode(node.left), visitNode(node.right)));
       case "modulo":
-        return optimizeNode(modulo(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(modulo(visitNode(node.left), visitNode(node.right)));
       case "multiply":
-        return optimizeNode(multiply(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
+        return optimizeNode(multiply(visitNode(node.left), visitNode(node.right)));
       case "program":
-        return optimizeNode(program(visitNode(node.stmtList) as Nodes.StmtList));
+        return optimizeNode(program(visitNode(node.stmtList)));
       case "setLocal":
-        return optimizeNode(setLocal(node.name, visitNode(node.value) as Nodes.Expr));
+        return optimizeNode(setLocal(node.name, visitNode(node.value)));
       case "stmtList":
         return optimizeNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
       case "subtract":
-        return optimizeNode(subtract(visitNode(node.left) as Nodes.Expr, visitNode(node.right) as Nodes.Expr));
-      default:
-        return node;
+        return optimizeNode(subtract(visitNode(node.left), visitNode(node.right)));
+      case "getLocal":
+      case "number":
+        return node as T;
     }
   }
 
-  return visitNode(node) as Nodes.Program;
+  return visitNode<Nodes.Program>(node);
 };
 
 type ConstantBinaryExpression = Nodes.Node<{
