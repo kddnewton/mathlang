@@ -41,14 +41,13 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
   return visitNode(node) as Nodes.Program;
 };
 
-type PotentialConstantBinaryExpression = Nodes.Add | Nodes.Subtract | Nodes.Multiply | Nodes.Divide | Nodes.Exponentiate | Nodes.Modulo;
-type ConstantBinaryExpression = {
-  type: PotentialConstantBinaryExpression["type"],
+type ConstantBinaryExpression = Nodes.Node<{
+  type: Nodes.Binary["type"],
   left: Nodes.Number,
-  right: Nodes.Number
-};
+  right: Nodes.Number,
+}>;
 
-function isConstantBinaryExpression(node: PotentialConstantBinaryExpression): node is ConstantBinaryExpression {
+function isConstantBinaryExpression(node: Nodes.Binary): node is ConstantBinaryExpression {
   return node.left.type === "number" && node.right.type === "number";
 }
 

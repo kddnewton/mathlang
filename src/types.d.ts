@@ -21,21 +21,24 @@ export declare namespace Tokens {
 }
 
 export declare namespace Nodes {
-  type Add = { type: "add", left: Expr, right: Expr };
-  type Call = { type: "call", name: string, args: Expr[] };
-  type Define = { type: "define", name: string, paramList: ParamList, stmtList: StmtList };
-  type Divide = { type: "divide", left: Expr, right: Expr };
-  type Exponentiate = { type: "exponentiate", left: Expr, right: Expr };
-  type GetLocal = { type: "getLocal", name: string };
-  type Modulo = { type: "modulo", left: Expr, right: Expr };
-  type Multiply = { type: "multiply", left: Expr, right: Expr };
-  type Number = { type: "number", value: number };
-  type Param = { type: "param", name: string };
-  type ParamList = { type: "paramList", params: Param[] };
-  type Program = { type: "program", stmtList: StmtList };
-  type SetLocal = { type: "setLocal", name: string, value: Expr };
-  type StmtList = { type: "stmtList", stmts: Stmt[] };
-  type Subtract = { type: "subtract", left: Expr, right: Expr };
+  type Meta = { [key: string]: any };
+  type Node<T> = T & { meta: Meta };
+
+  type Add = Node<{ type: "add", left: Expr, right: Expr }>;
+  type Call = Node<{ type: "call", name: string, args: Expr[] }>;
+  type Define = Node<{ type: "define", name: string, paramList: ParamList, stmtList: StmtList }>;
+  type Divide = Node<{ type: "divide", left: Expr, right: Expr }>;
+  type Exponentiate = Node<{ type: "exponentiate", left: Expr, right: Expr }>;
+  type GetLocal = Node<{ type: "getLocal", name: string }>;
+  type Modulo = Node<{ type: "modulo", left: Expr, right: Expr }>;
+  type Multiply = Node<{ type: "multiply", left: Expr, right: Expr }>;
+  type Number = Node<{ type: "number", value: number }>;
+  type Param = Node<{ type: "param", name: string }>;
+  type ParamList = Node<{ type: "paramList", params: Param[] }>;
+  type Program = Node<{ type: "program", stmtList: StmtList }>;
+  type SetLocal = Node<{ type: "setLocal", name: string, value: Expr }>;
+  type StmtList = Node<{ type: "stmtList", stmts: Stmt[] }>;
+  type Subtract = Node<{ type: "subtract", left: Expr, right: Expr }>;
 
   type Binary = Add | Subtract | Multiply | Divide | Exponentiate | Modulo;
   type Expr = Binary | Call | GetLocal | Number;
