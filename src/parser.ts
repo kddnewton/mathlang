@@ -35,41 +35,42 @@ function consume<T>(consumer: Consumer<T>, tokens: Tokens.All[], current: number
   return consumed;
 }
 
-const makeMatcher = (type: string) => (tokens: Tokens.All[], index: number): boolean => {
-  const token = tokens[index];
-  return token && token.type === type;
+const makeMatcher = <T extends Tokens.All>(type: T["type"]) => (token: Tokens.All | undefined): token is T => {
+  return token ? token.type === type : false;
 };
 
-const matchNewLine = makeMatcher("newline");
-const matchName = makeMatcher("name");
-const matchNumber = makeMatcher("number");
-
-const matchLParen = makeMatcher("lparen");
-const matchRParen = makeMatcher("rparen");
-const matchLBrace = makeMatcher("lbrace");
-const matchRBrace = makeMatcher("rbrace");
-const matchComma = makeMatcher("comma");
-const matchEquals = makeMatcher("equals");
-
-const matchPlus = makeMatcher("plus");
-const matchMinus = makeMatcher("minus");
-const matchTimes = makeMatcher("times");
-const matchOver = makeMatcher("over");
-const matchToThe = makeMatcher("tothe");
-const matchMod = makeMatcher("mod");
+const matchNewLine = makeMatcher<Tokens.NewLine>("newline");
+const matchName = makeMatcher<Tokens.Name>("name");
+const matchNumber = makeMatcher<Tokens.Number>("number");
+const matchLParen = makeMatcher<Tokens.LParen>("lparen");
+const matchRParen = makeMatcher<Tokens.RParen>("rparen");
+const matchLBrace = makeMatcher<Tokens.LBrace>("lbrace");
+const matchRBrace = makeMatcher<Tokens.RBrace>("rbrace");
+const matchComma = makeMatcher<Tokens.Comma>("comma");
+const matchEquals = makeMatcher<Tokens.Equals>("equals");
+const matchPlus = makeMatcher<Tokens.Plus>("plus");
+const matchMinus = makeMatcher<Tokens.Minus>("minus");
+const matchTimes = makeMatcher<Tokens.Times>("times");
+const matchOver = makeMatcher<Tokens.Over>("over");
+const matchMod = makeMatcher<Tokens.Mod>("mod");
+const matchToThe = makeMatcher<Tokens.ToThe>("tothe");
 
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
-  if (matchNumber(tokens, current)) {
-    return { node: number((tokens[current] as Tokens.Number).value), size: 1 };
+  const token = tokens[current];
+
+  if (matchNumber(token)) {
+    return { node: number(token.value), size: 1 };
   }
   return null;
 }
 
 // GetLocal -> Name
 function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.GetLocal> {
-  if (matchName(tokens, current)) {
-    return { node: getLocal((tokens[current] as Tokens.Name).value), size: 1 };
+  const token = tokens[current];
+
+  if (matchName(token)) {
+    return { node: getLocal(token.value), size: 1 };
   }
   return null;
 }
@@ -81,7 +82,7 @@ function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.E
     return null;
   }
 
-  if (!matchComma(tokens, current + consumed.size)) {
+  if (!matchComma(tokens[current + consumed.size])) {
     return { node: [consumed.node], size: consumed.size };
   }
 
@@ -94,40 +95,40 @@ function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.E
 
 // Call -> Name LParen RParen | Name LParen ArgList RParen
 function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call> {
-  if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
+  const token = tokens[current];
+
+  if (!matchName(token) || !matchLParen(tokens[current + 1])) {
     return null;
   }
 
   const argList = consumeArgList(tokens, current + 2);
   const argListSize = argList ? argList.size : 0;
 
-  if (!matchRParen(tokens, current + 2 + argListSize)) {
+  if (!matchRParen(tokens[current + 2 + argListSize])) {
     return null;
   }
 
   return {
-    node: call((tokens[current] as Tokens.Name).value, argList ? argList.node : []),
+    node: call(token.value, argList ? argList.node : []),
     size: argListSize + 3
   };
 }
 
 // Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
-  if (matchLParen(tokens, current)) {
+  const firstToken = tokens[current];
+  const secondToken = tokens[current + 1];
+
+  if (matchLParen(firstToken)) {
     const consumed = consumeExpr(tokens, current + 1);
 
-    if (consumed && matchRParen(tokens, current + 1 + consumed.size)) {
+    if (consumed && matchRParen(tokens[current + 1 + consumed.size])) {
       return { node: consumed.node, size: consumed.size + 2 };
     }
   }
 
-  if (matchNumber(tokens, current) && matchName(tokens, current + 1)) {
-    const node = multiply(
-      number((tokens[current] as Tokens.Number).value),
-      getLocal((tokens[current + 1] as Tokens.Name).value)
-    );
-
-    return { node, size: 2 };
+  if (matchNumber(firstToken) && matchName(secondToken)) {
+    return { node: multiply(number(firstToken.value), getLocal(secondToken.value)), size: 2 };
   }
 
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
@@ -140,7 +141,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     return null;
   }
 
-  if (!matchToThe(tokens, current + leftConsumed.size)) {
+  if (!matchToThe(tokens[current + leftConsumed.size])) {
     return leftConsumed;
   }
 
@@ -163,18 +164,17 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   if (
-    !matchTimes(tokens, current + leftConsumed.size) &&
-    !matchOver(tokens, current + leftConsumed.size) &&
-    !matchMod(tokens, current + leftConsumed.size)
+    !matchTimes(tokens[current + leftConsumed.size]) &&
+    !matchOver(tokens[current + leftConsumed.size]) &&
+    !matchMod(tokens[current + leftConsumed.size])
   ) {
     return leftConsumed;
   }
 
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
-  const operator = tokens[current + leftConsumed.size] as Tokens.Operator;
+  let builder;
 
-  let builder: (left: Nodes.Expr, right: Nodes.Expr) => Nodes.Expr;
-  switch (operator.type) {
+  switch (tokens[current + leftConsumed.size].type) {
     case "times":
       builder = multiply;
       break;
@@ -199,12 +199,12 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
     return null;
   }
 
-  if (!matchPlus(tokens, current + leftConsumed.size) && !matchMinus(tokens, current + leftConsumed.size)) {
+  if (!matchPlus(tokens[current + leftConsumed.size]) && !matchMinus(tokens[current + leftConsumed.size])) {
     return leftConsumed;
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = (tokens[current + leftConsumed.size] as Tokens.Operator).type === "plus" ? add : subtract;
+  const builder = tokens[current + leftConsumed.size].type === "plus" ? add : subtract;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
@@ -214,12 +214,14 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
 
 // ParamList -> Name Comma ParamList | Name
 function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes.ParamList> {
-  if (!matchName(tokens, current)) {
+  const token = tokens[current];
+
+  if (!matchName(token)) {
     return null;
   }
 
-  const params = [param((tokens[current] as Tokens.Name).value)];
-  if (!matchComma(tokens, current + 1)) {
+  const params = [param(token.value)];
+  if (!matchComma(tokens[current + 1])) {
     return { node: paramList(params), size: 1 };
   }
 
@@ -235,43 +237,47 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
 //   | Name LParen ParamList RParen Equals Stmt
 //   | Name LParen RParen Equals Stmt
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
-  if (!matchName(tokens, current) || !matchLParen(tokens, current + 1)) {
+  const token = tokens[current];
+
+  if (!matchName(token) || !matchLParen(tokens[current + 1])) {
     return null;
   }
 
   const params = consumeParamList(tokens, current + 2);
   const paramsSize = params ? params.size : 0;
 
-  if (!matchRParen(tokens, current + 2 + paramsSize) || !matchEquals(tokens, current + 3 + paramsSize)) {
+  if (!matchRParen(tokens[current + 2 + paramsSize]) || !matchEquals(tokens[current + 3 + paramsSize])) {
     return null;
   }
 
-  if (matchLBrace(tokens, current + 4 + paramsSize)) {
-    if (!matchNewLine(tokens, current + 5 + paramsSize)) {
+  if (matchLBrace(tokens[current + 4 + paramsSize])) {
+    if (!matchNewLine(tokens[current + 5 + paramsSize])) {
       return null;
     }
 
     const body = consume(consumeStmtList, tokens, current + 6 + paramsSize);
-    if (!matchRBrace(tokens, current + 6 + paramsSize + body.size)) {
+    if (!matchRBrace(tokens[current + 6 + paramsSize + body.size])) {
       return null;
     }
   
     return {
-      node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), body.node),
+      node: define(token.value, params ? params.node : paramList([]), body.node),
       size: paramsSize + body.size + 7
     };
   }
 
   const body = consume(consumeStmt, tokens, current + 4 + paramsSize);
   return {
-    node: define((tokens[current] as Tokens.Name).value, params ? params.node : paramList([]), stmtList([body.node])),
+    node: define(token.value, params ? params.node : paramList([]), stmtList([body.node])),
     size: paramsSize + body.size + 4
   };
 }
 
 // SetLocal -> Name Equals Expr
 function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
-  if (!matchName(tokens, current) || !matchEquals(tokens, current + 1)) {
+  const token = tokens[current];
+
+  if (!matchName(token) || !matchEquals(tokens[current + 1])) {
     return null;
   }
 
@@ -280,10 +286,7 @@ function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
     return null;
   }
 
-  return {
-    node: setLocal((tokens[current] as Tokens.Name).value, consumed.node),
-    size: consumed.size + 2
-  };
+  return { node: setLocal(token.value, consumed.node), size: consumed.size + 2 };
 }
 
 // Stmt -> Define | SetLocal | Expr
@@ -298,7 +301,7 @@ function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.
     return { node: stmtList([]), size: 0 };
   }
 
-  if (!matchNewLine(tokens, current + consumed.size)) {
+  if (!matchNewLine(tokens[current + consumed.size])) {
     return { node: stmtList([consumed.node]), size: consumed.size };
   }
 
