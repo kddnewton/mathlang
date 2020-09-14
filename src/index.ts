@@ -4,20 +4,22 @@ import optimizer from "./optimizer";
 import parser from "./parser";
 import tokenizer from "./tokenizer";
 import typeChecker from "./typeChecker";
+import { Nodes } from "./types";
 import virtualMachine from "./virtualMachine";
 
-export const evaluate = (source: string) => (
-  virtualMachine(compiler(optimizer(parser(tokenizer(source)))))
+type Options = { optimize?: boolean };
+
+const optimizeWithOptions = (node: Nodes.Program, options: Options) => (
+  options.optimize ? optimizer(node) : node
 );
 
-export const format = (source: string, { optimize }: { optimize?: boolean } = {}) => {
-  let node = parser(tokenizer(source));
-  if (optimize) {
-    node = optimizer(node)
-  }
+export const evaluate = (source: string, options: Options = {}) => (
+  virtualMachine(compiler(optimizeWithOptions(parser(tokenizer(source)), options)))
+);
 
-  return formatter(node);
-};
+export const format = (source: string, options: Options = {}) => (
+  formatter(optimizeWithOptions(parser(tokenizer(source)), options))
+);
 
 export const typeCheck = (source: string) => (
   typeChecker(parser(tokenizer(source)))
