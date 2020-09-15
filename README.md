@@ -2,6 +2,16 @@
 
 A small language I'm writing to learn more about compilers/virtual machines/optimizers/type checkers/etc. without using dependencies.
 
+## Roadmap
+
+- [ ] Playground
+- [ ] Language server
+- [ ] Inline function optimizer
+- [ ] Conditionals
+- [ ] Units on numbers
+- [ ] Negative numbers
+- [ ] Floating point numbers
+
 ## Syntax
 
 ### Basics
