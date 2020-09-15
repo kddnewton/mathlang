@@ -11,6 +11,8 @@ A small language I'm writing to learn more about compilers/virtual machines/opti
 - [ ] Units on numbers
 - [ ] Negative numbers
 - [ ] Floating point numbers
+- [ ] Better error messages
+- [ ] Better type checking messages
 
 ## Syntax
 
