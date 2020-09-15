@@ -1,7 +1,6 @@
 {
-  "name": "mathlang",
-  "version": "0.1.0",
-  "description": "Math!",
+  "name": "mathlang-hub",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "compile": "tsc --noEmit",
@@ -21,5 +20,8 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

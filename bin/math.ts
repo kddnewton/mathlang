@@ -1,7 +1,7 @@
 #!./node_modules/.bin/ts-node
 
 import fs from "fs";
-import { evaluate, format, repl, tokenize, typeCheck } from "../src";
+import { evaluate, format, repl, tokenize, typeCheck } from "../packages/mathlang";
 
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
@@ -23,12 +23,9 @@ switch (args[0]) {
     break;
 }
 
-const readFile = (source: string | number) => (
-  fs.readFileSync(source).toString("utf-8")
-);
-
-const commandFile = (source: string | number) => {
-  console.log(command(readFile(source)));
+const commandFile = (handle: string | number) => {
+  const source = fs.readFileSync(handle).toString("utf-8");
+  console.log(command(source));
 };
 
 if (fs.fstatSync(0).isFIFO()) {
