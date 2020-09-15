@@ -25,23 +25,23 @@ export declare namespace Tokens {
 
 export declare namespace Nodes {
   type Meta = { [key: string]: any };
-  type Node<T> = T & { meta: Meta };
+  type Node<K, V> = { kind: K, meta: Meta } & V;
 
-  type Add = Node<{ type: "add", left: Expr, right: Expr }>;
-  type Call = Node<{ type: "call", name: string, args: Expr[] }>;
-  type Define = Node<{ type: "define", name: string, paramList: ParamList, stmtList: StmtList }>;
-  type Divide = Node<{ type: "divide", left: Expr, right: Expr }>;
-  type Exponentiate = Node<{ type: "exponentiate", left: Expr, right: Expr }>;
-  type GetLocal = Node<{ type: "getLocal", name: string }>;
-  type Modulo = Node<{ type: "modulo", left: Expr, right: Expr }>;
-  type Multiply = Node<{ type: "multiply", left: Expr, right: Expr }>;
-  type Number = Node<{ type: "number", value: number }>;
-  type Param = Node<{ type: "param", name: string }>;
-  type ParamList = Node<{ type: "paramList", params: Param[] }>;
-  type Program = Node<{ type: "program", stmtList: StmtList }>;
-  type SetLocal = Node<{ type: "setLocal", name: string, value: Expr }>;
-  type StmtList = Node<{ type: "stmtList", stmts: Stmt[] }>;
-  type Subtract = Node<{ type: "subtract", left: Expr, right: Expr }>;
+  type Add = Node<"add", { left: Expr, right: Expr }>;
+  type Call = Node<"call", { name: string, args: Expr[] }>;
+  type Define = Node<"define", { name: string, paramList: ParamList, stmtList: StmtList }>;
+  type Divide = Node<"divide", { left: Expr, right: Expr }>;
+  type Exponentiate = Node<"exponentiate", { left: Expr, right: Expr }>;
+  type GetLocal = Node<"getLocal", { name: string }>;
+  type Modulo = Node<"modulo", { left: Expr, right: Expr }>;
+  type Multiply = Node<"multiply", { left: Expr, right: Expr }>;
+  type Number = Node<"number", { value: number }>;
+  type Param = Node<"param", { name: string }>;
+  type ParamList = Node<"paramList", { params: Param[] }>;
+  type Program = Node<"program", { stmtList: StmtList }>;
+  type SetLocal = Node<"setLocal", { name: string, value: Expr }>;
+  type StmtList = Node<"stmtList", { stmts: Stmt[] }>;
+  type Subtract = Node<"subtract", { left: Expr, right: Expr }>;
 
   type Binary = Add | Subtract | Multiply | Divide | Exponentiate | Modulo;
   type Expr = Binary | Call | GetLocal | Number;
@@ -51,16 +51,18 @@ export declare namespace Nodes {
 }
 
 export declare namespace Insns {
-  type Add = { type: "add" };
-  type Call = { type: "call" };
-  type Define = { type: "define" };
-  type Divide = { type: "divide" };
-  type Exponentiate = { type: "exponentiate" };
-  type GetLocal = { type: "getLocal" };
-  type Modulo = { type: "modulo" };
-  type Multiply = { type: "multiply" };
-  type SetLocal = { type: "setLocal" };
-  type Subtract = { type: "subtract" };
+  type Insn<K> = { kind: K };
+
+  type Add = Insn<"add">;
+  type Call = Insn<"call">;
+  type Define = Insn<"define">;
+  type Divide = Insn<"divide">;
+  type Exponentiate = Insn<"exponentiate">;
+  type GetLocal = Insn<"getLocal">;
+  type Modulo = Insn<"modulo">;
+  type Multiply = Insn<"multiply">;
+  type SetLocal = Insn<"setLocal">;
+  type Subtract = Insn<"subtract">;
   
   type Binary = Add | Subtract | Multiply | Divide | Exponentiate | Modulo;
   type Operation = Binary | Call | Define | GetLocal | SetLocal;

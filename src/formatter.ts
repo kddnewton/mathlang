@@ -2,7 +2,7 @@ import { Nodes } from "./types";
 
 // Output a node to readable code
 const formatter = (node: Nodes.All, indent: string = ""): string => {
-  switch (node.type) {
+  switch (node.kind) {
     case "add":
       return `${indent}${formatter(node.left)} + ${formatter(node.right)}`;
     case "call":
@@ -26,7 +26,7 @@ const formatter = (node: Nodes.All, indent: string = ""): string => {
     case "modulo":
       return `${indent}${formatter(node.left)} % ${formatter(node.right)}`;
     case "multiply":
-      if (node.left.type === "number" && node.right.type === "getLocal") {
+      if (node.left.kind === "number" && node.right.kind === "getLocal") {
         return `${indent}${formatter(node.left)}${formatter(node.right)}`;
       }
 

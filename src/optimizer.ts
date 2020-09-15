@@ -1,16 +1,16 @@
 import { Nodes } from "./types";
 import { add, call, define, divide, exponentiate, modulo, multiply, number, program, setLocal, stmtList, subtract } from "./builders";
 
-type Optimizer = Partial<{ [T in Nodes.All["type"]]: (node: Nodes.All & { type: T }) => Nodes.All | undefined }>;
+type Optimizer = Partial<{ [T in Nodes.All["kind"]]: (node: Nodes.All & { kind: T }) => Nodes.All | undefined }>;
 
 const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
   const optimizeNode = <T extends Nodes.All>(node: Nodes.All): T => {
-    const callback = optimizer[node.type];
+    const callback = optimizer[node.kind];
     return callback ? ((callback as any)(node) || node) : node;
   };
 
   const visitNode = <T extends Nodes.All>(node: Nodes.All): T => {
-    switch (node.type) {
+    switch (node.kind) {
       case "add":
         return optimizeNode(add(visitNode(node.left), visitNode(node.right)));
       case "call":
@@ -42,14 +42,13 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
   return visitNode<Nodes.Program>(node);
 };
 
-type ConstantBinaryExpression = Nodes.Node<{
-  type: Nodes.Binary["type"],
+type ConstantBinaryExpression = Nodes.Node<Nodes.Binary["kind"], {
   left: Nodes.Number,
   right: Nodes.Number,
 }>;
 
 function isConstantBinaryExpression(node: Nodes.Binary): node is ConstantBinaryExpression {
-  return node.left.type === "number" && node.right.type === "number";
+  return node.left.kind === "number" && node.right.kind === "number";
 }
 
 const replaceConstantBinaryExpressions: Optimizer = {

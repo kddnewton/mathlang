@@ -11,7 +11,7 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
 
   insns.forEach((insn) => {
     if (isOperation(insn)) {
-      switch (insn.type) {
+      switch (insn.kind) {
         case "add":
           stack.push(stack.pop() + stack.pop());
           break;

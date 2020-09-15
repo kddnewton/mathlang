@@ -1,18 +1,18 @@
 import { Nodes } from "./types";
 
-export type Visitor = Partial<{ [T in Nodes.All["type"]]: {
-  enter?: (node: Nodes.All & { type: T }) => void,
-  exit?: (node: Nodes.All & { type: T }) => void
+export type Visitor = Partial<{ [T in Nodes.All["kind"]]: {
+  enter?: (node: Nodes.All & { kind: T }) => void,
+  exit?: (node: Nodes.All & { kind: T }) => void
 }}>;
 
 const visit = (node: Nodes.Program, visitor: Visitor): void => {
   const visitNode = (node: Nodes.All): void => {
-    const callbacks = visitor[node.type];
+    const callbacks = visitor[node.kind];
     if (callbacks && callbacks.enter) {
       (callbacks.enter as any)(node);
     }
 
-    switch (node.type) {
+    switch (node.kind) {
       case "add":
       case "divide":
       case "exponentiate":
