@@ -13,6 +13,7 @@ A small language I'm writing to learn more about compilers/virtual machines/opti
 - [ ] Floating point numbers
 - [ ] Better error messages
 - [ ] Better type checking messages
+- [ ] REPL
 
 ## Syntax
 

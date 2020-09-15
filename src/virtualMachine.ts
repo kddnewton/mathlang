@@ -2,7 +2,7 @@ import { Insns } from "./types";
 import stdlib, { isStdLib } from "./stdlib";
 
 function isOperation(object: Insns.All): object is Insns.Operation {
-  return Object.prototype.hasOwnProperty.call(object, "type");
+  return Object.prototype.hasOwnProperty.call(object, "kind");
 }
 
 const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = {}): number => {

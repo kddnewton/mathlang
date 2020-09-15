@@ -13,16 +13,22 @@ const optimizeWithOptions = (node: Nodes.Program, options: Options) => (
   options.optimize ? optimizer(node) : node
 );
 
+export const parse = (source: string, options: Options = {}) => (
+  optimizeWithOptions(parser(tokenizer(source)), options)
+);
+
+export const compile = (source: string, options: Options = {}) => (
+  compiler(parse(source, options))
+);
+
 export const evaluate = (source: string, options: Options = {}) => (
-  virtualMachine(compiler(optimizeWithOptions(parser(tokenizer(source)), options)))
+  virtualMachine(compile(source, options))
 );
 
 export const format = (source: string, options: Options = {}) => (
-  formatter(optimizeWithOptions(parser(tokenizer(source)), options))
+  formatter(parse(source, options))
 );
 
 export const tokenize = tokenizer;
 
-export const typeCheck = (source: string) => (
-  typeChecker(parser(tokenizer(source)))
-);
+export const typeCheck = (source: string) => typeChecker(parse(source));

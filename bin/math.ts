@@ -6,15 +6,21 @@ import { evaluate, format, tokenize, typeCheck } from "../src";
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
 
-if (["-f", "--format"].includes(args[0])) {
-  args.shift();
-  command = format;
-} else if (["-t", "--type-check"].includes(args[0])) {
-  args.shift();
-  command = typeCheck;
-} else if (["--dump-tokens"].includes(args[0])) {
-  args.shift();
-  command = tokenize;
+switch (args[0]) {
+  case "-f":
+  case "--format":
+    args.shift();
+    command = format;
+    break;
+  case "-t":
+  case "--type-check":
+    args.shift();
+    command = typeCheck;
+    break;
+  case "--dump-tokens":
+    args.shift();
+    command = tokenize;
+    break;
 }
 
 const source = fs.fstatSync(0).isFIFO() ? 0 : args[0];
