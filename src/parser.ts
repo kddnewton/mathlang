@@ -7,18 +7,16 @@ import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, nu
  * Program -> StmtList
  * StmtList -> Stmt NewLine StmtList | Stmt
  * Stmt -> Define | SetLocal | Expr
- * Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
- *   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
- *   | Name LParen ParamList RParen Equals Stmt
- *   | Name LParen RParen Equals Stmt
- * ParamList -> Name Comma ParamList | Name
+ * Define -> Name LParen ParamList? RParen Equals LBrace NewLine StmtList RBrace
+ *   | Name LParen ParamList? RParen Equals Stmt
+ * ParamList -> Name (Comma ParamList)*
  * SetLocal -> Name Equals Expr
- * Expr -> Term Plus Term | Term Minus Term | Term
- * Term -> Power Times Power | Power Over Power | Power Mod Power | Power
- * Power -> Value ToThe Power | Value
+ * Expr -> Term ((Plus | Minus) Expr)*
+ * Term -> Power ((Times | Over) Term)*
+ * Power -> Value (ToThe Power)*
  * Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
- * Call -> Name LParen RParen |  Name LParen ArgList RParen
- * ArgList -> Expr Comma ArgList | Expr
+ * Call -> Name LParen ArgList? RParen
+ * ArgList -> Expr (Comma ArgList)*
  * GetLocal -> Name
  */
 
@@ -93,7 +91,7 @@ function consumeArgList(tokens: Tokens.All[], current: number): Consumed<Nodes.E
   };
 }
 
-// Call -> Name LParen RParen | Name LParen ArgList RParen
+// Call -> Name LParen ArgList? RParen
 function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call> {
   const token = tokens[current];
 
@@ -134,7 +132,7 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
 };
 
-// Power -> Value ToThe Power | Value
+// Power -> Value (ToThe Power)*
 function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumeValue(tokens, current);
   if (!leftConsumed) {
@@ -153,7 +151,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   };
 }
 
-// Term -> Power Times Power | Power Over Power | Power Mod Power | Power
+// Term -> Power ((Times | Over | Mod) Power)*
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumePower(tokens, current);
   if (!leftConsumed) {
@@ -168,7 +166,7 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
     return leftConsumed;
   }
 
-  const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
+  const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
   let builder;
 
   switch (tokens[current + leftConsumed.size].kind) {
@@ -189,7 +187,7 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   };
 }
 
-// Expr -> Term Plus Term | Term Minus Term | Term
+// Expr -> Term ((Plus | Minus) Expr)*
 function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumeTerm(tokens, current);
   if (!leftConsumed) {
@@ -200,7 +198,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
     return leftConsumed;
   }
 
-  const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
+  const rightConsumed = consume(consumeExpr, tokens, current + 1 + leftConsumed.size);
   const builder = tokens[current + leftConsumed.size].kind === "plus" ? add : subtract;
 
   return {
@@ -229,10 +227,8 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
   };
 }
 
-// Define -> Name LParen RParen Equals LBrace NewLine StmtList RBrace
-//   | Name LParen ParamList RParen Equals LBrace NewLine StmtList RBrace
-//   | Name LParen ParamList RParen Equals Stmt
-//   | Name LParen RParen Equals Stmt
+// Define -> Name LParen ParamList? RParen Equals LBrace NewLine StmtList RBrace
+//   | Name LParen ParamList? RParen Equals Stmt
 function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.Define> {
   const token = tokens[current];
 
