@@ -29,8 +29,6 @@ export const format = (source: string, options: Options = {}) => (
   formatter(parse(source, options))
 );
 
-export { default as repl } from "./repl";
-
 export const tokenize = tokenizer;
 
 export const typeCheck = (source: string) => typeChecker(parse(source));

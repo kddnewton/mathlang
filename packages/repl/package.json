@@ -1,0 +1,10 @@
+{
+  "name": "@mathlang/repl",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "author": "Kevin Deisz",
+  "license": "MIT",
+  "dependencies": {
+    "mathlang": "^0.1.0"
+  }
+}

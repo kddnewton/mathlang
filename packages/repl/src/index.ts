@@ -1,13 +1,13 @@
 import fs from "fs";
 import readline from "readline";
+import path from "path";
 
-import compiler from "./compiler";
-import parser from "./parser";
-import tokenizer from "./tokenizer";
-import virtualMachine from "./virtualMachine";
+import { evaluate } from "mathlang";
 
 const repl = () => {
-  const { version } = JSON.parse(fs.readFileSync("package.json").toString("utf-8"));
+  const packagePath = path.join(__dirname, "../package.json");
+  const { version } = JSON.parse(fs.readFileSync(packagePath).toString("utf-8"));
+ 
   console.log(`Welcome to mathlang v${version}`);
 
   const rl = readline.createInterface({
@@ -21,7 +21,7 @@ const repl = () => {
 
   const prompt = () => {
     rl.question("> ", (source) => {
-      console.log(virtualMachine(compiler(parser(tokenizer(source)))));
+      console.log(evaluate(source));
       prompt();
     });
   };
