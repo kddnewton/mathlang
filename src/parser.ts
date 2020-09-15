@@ -29,14 +29,14 @@ type Consumer<T> = (tokens: Tokens.All[], current: number) => Consumed<T>;
 function consume<T>(consumer: Consumer<T>, tokens: Tokens.All[], current: number): SomeConsumed<T> {
   const consumed = consumer(tokens, current);
   if (!consumed) {
-    throw new TypeError(tokens[current] ? tokens[current].type : "EOF");
+    throw new TypeError(tokens[current] ? tokens[current].kind : "EOF");
   }
 
   return consumed;
 }
 
-const makeMatcher = <T extends Tokens.All>(type: T["type"]) => (token: Tokens.All | undefined): token is T => {
-  return token ? token.type === type : false;
+const makeMatcher = <T extends Tokens.All>(type: T["kind"]) => (token: Tokens.All | undefined): token is T => {
+  return token ? token.kind === type : false;
 };
 
 const matchNewLine = makeMatcher<Tokens.NewLine>("newline");
@@ -145,10 +145,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     return leftConsumed;
   }
 
-  const rightConsumed = consumePower(tokens, current + 1 + leftConsumed.size);
-  if (!rightConsumed) {
-    throw new TypeError(tokens[current + 1 + leftConsumed.size].type);
-  }
+  const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
 
   return {
     node: exponentiate(leftConsumed.node, rightConsumed.node),
@@ -174,7 +171,7 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
   let builder;
 
-  switch (tokens[current + leftConsumed.size].type) {
+  switch (tokens[current + leftConsumed.size].kind) {
     case "times":
       builder = multiply;
       break;
@@ -204,7 +201,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumeTerm, tokens, current + 1 + leftConsumed.size);
-  const builder = tokens[current + leftConsumed.size].type === "plus" ? add : subtract;
+  const builder = tokens[current + leftConsumed.size].kind === "plus" ? add : subtract;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),
@@ -321,7 +318,7 @@ function consumeProgram(tokens: Tokens.All[], current: number): Consumed<Nodes.P
 const parser = (tokens: Tokens.All[]): Nodes.Program => {
   const consumed = consume(consumeProgram, tokens, 0);
   if (consumed.size !== tokens.length) {
-    throw new TypeError(tokens[0].type);
+    throw new TypeError(tokens[0].kind);
   }
 
   return consumed.node;

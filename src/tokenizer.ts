@@ -1,8 +1,6 @@
 import { Tokens } from "./types";
 
-const numbers = /[0-9]/;
-const letters = /[a-z]/i;
-const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["type"] } = {
+const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["kind"] } = {
   ",": "comma",
   "=": "equals",
   "{": "lbrace",
@@ -17,64 +15,53 @@ const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["type"] } = {
   "^": "tothe"
 };
 
-function isMapped(char: keyof typeof mapped): char is keyof typeof mapped {
-  return Object.prototype.hasOwnProperty.call(mapped, char);
-}
+const pieces = {
+  newline: "\\n+",
+  whitespace: "\\s+",
+  mapped: `[${Object.keys(mapped).join("").replace("-", "\\-")}]`,
+  number: "[1-9][0-9]*",
+  name: "[a-z][0-9a-zA-Z]*"
+};
 
-const tokenizer = (source: string) => {
-  const input = source.trim();
+const patterns = Object.keys(pieces).map((key) => (
+  `(?<${key}>${pieces[key as keyof typeof pieces]})`
+));
 
-  let current = 0;
+const pattern = new RegExp(`(${patterns.join("|")})`, "g");
+
+const tokenizer = (input: string) => {
+  const source = input.trim();
   const tokens: Tokens.All[] = [];
 
-  while (current < input.length) {
-    let char = input[current];
+  const matches = source.matchAll(pattern);
+  const loc = { pos: 0, line: 0, col: 0 };
 
-    if (char === "\n") {
-      if (!tokens[tokens.length - 1] || tokens[tokens.length - 1].type !== "newline") {
-        tokens.push({ type: "newline" });
-      }
-
-      current++;
-      continue;
+  for (const match of matches) {
+    if (match.index === undefined || match.index > loc.pos) {
+      throw new TypeError(`Unable to parse: ${source[loc.pos]}`);
     }
 
-    if (/\s/.test(char)) {
-      current++;
-      continue;
+    const groups = match.groups || {};
+
+    if (groups.newline) {
+      tokens.push({ kind: "newline", loc: { ...loc } });
+      loc.line += groups.newline.length;
+    } else if (groups.whitespace) {
+      // skip straight over whitespace
+    } else if (groups.mapped) {
+      tokens.push({ kind: mapped[groups.mapped], loc: { ...loc } });
+    } else if (groups.number) {
+      tokens.push({ kind: "number", value: parseInt(groups.number, 10), loc: { ...loc } });
+    } else if (groups.name) {
+      tokens.push({ kind: "name", value: groups.name, loc: { ...loc } });
     }
 
-    if (isMapped(char)) {
-      tokens.push({ type: mapped[char] });
-      current++;
-      continue;
-    }
+    loc.pos = match.index + match[0].length;
+    loc.col = groups.newline ? 0 : (loc.col + match[0].length);
+  }
 
-    if (numbers.test(char)) {
-      let chars = "";
-
-      while (char && numbers.test(char)) {
-        chars += char;
-        char = input[++current];
-      }
-
-      tokens.push({ type: "number", value: parseInt(chars, 10) });
-      continue;
-    }
-
-    if (letters.test(char)) {
-      let chars = "";
-
-      while (char && letters.test(char)) {
-        chars += char;
-        char = input[++current];
-      }
-
-      tokens.push({ type: "name", value: chars });
-      continue;
-    }
-
-    throw new TypeError(`Unable to parse: ${char}`);
+  if (loc.pos < source.length) {
+    throw new TypeError(`Unable to parse: ${source[loc.pos]}`);
   }
 
   return tokens;

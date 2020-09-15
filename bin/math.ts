@@ -1,7 +1,7 @@
 #!./node_modules/.bin/ts-node
 
 import fs from "fs";
-import { evaluate, format, typeCheck } from "../src";
+import { evaluate, format, tokenize, typeCheck } from "../src";
 
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
@@ -12,6 +12,9 @@ if (["-f", "--format"].includes(args[0])) {
 } else if (["-t", "--type-check"].includes(args[0])) {
   args.shift();
   command = typeCheck;
+} else if (["--dump-tokens"].includes(args[0])) {
+  args.shift();
+  command = tokenize;
 }
 
 const source = fs.fstatSync(0).isFIFO() ? 0 : args[0];

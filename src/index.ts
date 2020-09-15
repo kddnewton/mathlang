@@ -21,6 +21,8 @@ export const format = (source: string, options: Options = {}) => (
   formatter(optimizeWithOptions(parser(tokenizer(source)), options))
 );
 
+export const tokenize = tokenizer;
+
 export const typeCheck = (source: string) => (
   typeChecker(parser(tokenizer(source)))
 );

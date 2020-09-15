@@ -1,19 +1,22 @@
 export declare namespace Tokens {
-  type Comma = { type: "comma" };
-  type Equals = { type: "equals" };
-  type LBrace = { type: "lbrace" };
-  type LParen = { type: "lparen" };
-  type Minus = { type: "minus" };
-  type Mod = { type: "mod" };
-  type Name = { type: "name", value: string };
-  type NewLine = { type: "newline" };
-  type Number = { type: "number", value: number };
-  type Over = { type: "over" };
-  type Plus = { type: "plus" };
-  type RBrace = { type: "rbrace" };
-  type RParen = { type: "rparen" };
-  type Times = { type: "times" };
-  type ToThe = { type: "tothe" };
+  type Loc = { line: number, col: number, pos: number };
+  type Token<K, V = undefined> = { kind: K, loc: Loc } & (V extends undefined ? {} : { value: V });
+
+  type Comma = Token<"comma">;
+  type Equals = Token<"equals">;
+  type LBrace = Token<"lbrace">;
+  type LParen = Token<"lparen">;
+  type Minus = Token<"minus">;
+  type Mod = Token<"mod">;
+  type Name = Token<"name", string>;
+  type NewLine = Token<"newline">;
+  type Number = Token<"number", number>;
+  type Over = Token<"over">;
+  type Plus = Token<"plus">;
+  type RBrace = Token<"rbrace">;
+  type RParen = Token<"rparen">;
+  type Times = Token<"times">;
+  type ToThe = Token<"tothe">;
 
   type Symbol = Comma | Equals | LBrace | LParen | RBrace | RParen;
   type Operator = Minus | Mod | Over | Plus | Times | ToThe;
