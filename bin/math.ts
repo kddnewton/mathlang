@@ -1,8 +1,9 @@
 #!./node_modules/.bin/ts-node
 
 import fs from "fs";
-import { evaluate, format, tokenize, typeCheck } from "../packages/mathlang";
+import { evaluate, tokenize, typeCheck } from "../packages/mathlang";
 import repl from "../packages/repl";
+import format from "../packages/format";
 
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
