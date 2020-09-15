@@ -1,7 +1,7 @@
 #!./node_modules/.bin/ts-node
 
 import fs from "fs";
-import { evaluate, format, tokenize, typeCheck } from "../src";
+import { evaluate, format, repl, tokenize, typeCheck } from "../src";
 
 const args = process.argv.slice(2);
 let command: (source: string) => any = evaluate;
@@ -23,7 +23,18 @@ switch (args[0]) {
     break;
 }
 
-const source = fs.fstatSync(0).isFIFO() ? 0 : args[0];
-const input = fs.readFileSync(source).toString("utf-8");
+const readFile = (source: string | number) => (
+  fs.readFileSync(source).toString("utf-8")
+);
 
-console.log(command(input));
+const commandFile = (source: string | number) => {
+  console.log(command(readFile(source)));
+};
+
+if (fs.fstatSync(0).isFIFO()) {
+  commandFile(0);
+} else if (args[0]) {
+  commandFile(args[0]);
+} else {
+  repl();
+}
