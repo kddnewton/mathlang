@@ -7,8 +7,7 @@ export default {
       { test: /\.tsx?$/, use: "awesome-typescript-loader" },
       {
         test: /\.css$/,
-        use: [{ loader: "style-loader" }, { loader: "css-loader" }],
-        exclude: /node_modules/
+        use: [{ loader: "style-loader" }, { loader: "css-loader" }]
       }
     ]
   }
