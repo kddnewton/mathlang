@@ -17,3 +17,38 @@ body {
   font-weight: normal;
   margin: 0;
 }
+
+.evaluate {
+  background: linear-gradient(#fdfdfd,#d2d3d6);
+  border-radius: 17px;
+  border: 1px solid rgba(0,0,0,.25);
+  box-shadow: 0 1px 0 #fff;
+  cursor: pointer;
+  fill: #444;
+  height: 34px;
+  margin: 0;
+  margin-left: 1rem;
+  padding: 0;
+  width: 34px;
+}
+
+.DraftEditor-root {
+  min-height: 40rem;
+  padding: 1rem;
+}
+
+.line {
+  position: relative;
+}
+
+.line::before {
+  content: attr(data-line-number);
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.5;
+}
+
+.line-text {
+  margin-left: 2em;
+}
