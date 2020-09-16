@@ -3,6 +3,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
+    "build": "cp packages/playground/index.html docs/index.html && pushd packages/playground && yarn build",
     "compile": "tsc --noEmit",
     "math": "ts-node ./packages/cli/src/bin.ts",
     "start": "pushd packages/playground && yarn start",

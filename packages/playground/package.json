@@ -5,6 +5,7 @@
   "author": "Kevin Deisz",
   "license": "MIT",
   "scripts": {
+    "build": "webpack --mode production",
     "start": "webpack-dev-server --hot"
   },
   "dependencies": {
