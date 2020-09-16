@@ -9,13 +9,14 @@ body {
   border-bottom: 1px solid #d0d0d0;
   display: flex;
   flex: 1;
-  padding: 0.8rem 1rem;
+  padding: 0.5rem 1rem;
 }
 
 .nav h1 {
   font-size: 1.2rem;
   font-weight: normal;
   margin: 0;
+  padding: 0;
 }
 
 .evaluate {
@@ -33,6 +34,7 @@ body {
 }
 
 .DraftEditor-root {
+  font-family: monospace;
   min-height: 40rem;
   padding: 1rem;
 }
