@@ -1,9 +1,17 @@
 import React, { useState, Dispatch, SetStateAction } from "react";
-import { Editor as DraftEditor, EditorBlock, EditorState } from "draft-js";
+import { Editor as DraftEditor, ContentState, EditorBlock, EditorState, KeyBindingUtil, getDefaultKeyBinding } from "draft-js";
 import "draft-js/dist/Draft.css";
 
+const defaultText = `f(x) = 2x
+g(x) = x^2 + 1
+
+f(g(5)) / 2
+`;
+
 export const useEditorState = () => (
-  useState<EditorState>(() => EditorState.createEmpty())
+  useState<EditorState>(() => (
+    EditorState.createWithContent(ContentState.createFromText(defaultText))
+  ))
 );
 
 export const getEditorText = (editorState: EditorState) => (
@@ -26,17 +34,37 @@ const Line: React.FC<LineProps> = ({ block, contentState, ...props })=> {
 
 const blockRendererFn = () => ({ component: Line });
 
-type EditorProps = {
-  editorState: EditorState,
-  onChange: Dispatch<SetStateAction<EditorState>>
+const keyBindingFn = (event: React.KeyboardEvent) => {
+  if (event.key === "Enter" && KeyBindingUtil.hasCommandModifier(event)) {
+    return "evaluate";
+  }
+  return getDefaultKeyBinding(event);
 };
 
-const Editor: React.FC<EditorProps> = ({ editorState, onChange }) => (
-  <DraftEditor
-    blockRendererFn={blockRendererFn}
-    editorState={editorState}
-    onChange={onChange}
-  />
-);
+type EditorProps = {
+  editorState: EditorState,
+  onChange: Dispatch<SetStateAction<EditorState>>,
+  onEvaluate: () => void
+};
+
+const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) => {
+  const handleKeyCommand = (command: string) => {
+    if (command === "evaluate") {
+      onEvaluate();
+      return "handled";
+    }
+    return "not-handled";
+  };
+
+  return (
+    <DraftEditor
+      blockRendererFn={blockRendererFn}
+      handleKeyCommand={handleKeyCommand}
+      keyBindingFn={keyBindingFn}
+      editorState={editorState}
+      onChange={onChange}
+    />
+  );
+};
 
 export default Editor;
