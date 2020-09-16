@@ -1,6 +1,6 @@
 {
   "name": "@mathlang/playground",
-  "version": "0.1.0",
+  "private": true,
   "main": "src/index.ts",
   "author": "Kevin Deisz",
   "license": "MIT",
