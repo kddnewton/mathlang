@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  font-size: 16px;
+}
+
+.nav {
+  align-items: center;
+  background: linear-gradient(#f7f7f7,#e2e2e2);
+  border-bottom: 1px solid #d0d0d0;
+  display: flex;
+  flex: 1;
+  padding: 0.8rem 1rem;
+}
+
+.nav h1 {
+  font-size: 1.2rem;
+  font-weight: normal;
+  margin: 0;
+}
