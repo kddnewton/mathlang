@@ -4,7 +4,6 @@ A small language I'm writing to learn more about compilers/virtual machines/opti
 
 ## Roadmap
 
-- [ ] Playground frontend
 - [ ] Playground backend
 - [ ] Language server
 - [ ] Inline function optimizer
