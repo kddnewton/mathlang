@@ -2,11 +2,12 @@
   "compilerOptions": {
     "downlevelIteration": true,
     "esModuleInterop": true,
-    "jsx": "react",
     "lib": [
+      "dom",
       "es2019",
       "es2020.string"
     ],
+    "jsx": "react",
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
@@ -15,6 +16,6 @@
     "strict": true,
     "target": "es5"
   },
-  "include": ["src", "bin"],
+  "include": ["**/src/*"],
   "exclude": ["**/__tests__/*"]
 }
