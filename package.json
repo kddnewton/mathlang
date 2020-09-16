@@ -1,5 +1,5 @@
 {
-  "name": "mathlang-hub",
+  "name": "mathlang",
   "private": true,
   "main": "index.js",
   "scripts": {

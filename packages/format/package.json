@@ -5,6 +5,6 @@
   "author": "Kevin Deisz",
   "license": "MIT",
   "dependencies": {
-    "mathlang": "^0.1.0"
+    "@mathlang/core": "^0.1.0"
   }
 }
