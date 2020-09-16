@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, Dispatch, SetStateAction } from "react";
 import { evaluate } from "@mathlang/core";
 
 type NavProps = {
@@ -16,33 +16,70 @@ const Nav: React.FC<NavProps> = ({ onEvaluate }) => (
   </nav>
 );
 
-type EditorProps = {
-  value: string,
-  onChange: (value: string) => void
+type EditorState = {
+  blocks: string[],
+  line: number
 };
 
-const Editor: React.FC<EditorProps> = ({ value, onChange }) => {
-  const onInput = (event: React.FormEvent<HTMLDivElement>) => {
-    onChange(event.currentTarget.textContent || "");
+type EditorProps = {
+  state: EditorState,
+  onChange: Dispatch<SetStateAction<EditorState>>
+};
+
+const Editor: React.FC<EditorProps> = ({ state, onChange }) => {
+  const onKeyPress = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!event.metaKey) {
+      const { key } = event;
+
+      switch (key) {
+        case "Enter":
+          onChange((current) => ({
+            blocks: [
+              ...current.blocks.slice(0, current.line + 1),
+              "",
+              ...current.blocks.slice(current.line + 1)
+            ],
+            line: current.line + 1
+          }));
+          break;
+        default:
+          onChange((current) => ({
+            ...current,
+            blocks: [
+              ...current.blocks.slice(0, current.line),
+              `${current.blocks[current.line]}${key}`,
+              ...current.blocks.slice(current.line + 1)
+            ]
+          }));
+          break;
+      }
+    }
   };
 
   return (
-    <div contentEditable onInput={onInput}>
-      {value}
+    <div className="editor" tabIndex={0} onKeyPress={onKeyPress}>
+      {state.blocks.map((value, index) => (
+        <div key={index}>
+          <strong>{index + 1}</strong> {value}
+        </div>
+      ))}
     </div>
   );
 };
 
 const App: React.FC = () => {
-  const [source, setSource] = useState("");
+  const [editorState, setEditorState] = useState<EditorState>({ blocks: [""], line: 0 });
   const [result, setResult] = useState<number | null>(null);
 
-  const onEvaluate = () => setResult(evaluate(source));
+  const onEvaluate = () => {
+    console.log(editorState.blocks);
+    setResult(evaluate(editorState.blocks.join("\n")));
+  };
 
   return (
     <>
       <Nav onEvaluate={onEvaluate} />
-      <Editor value={source} onChange={setSource} />
+      <Editor state={editorState} onChange={setEditorState} />
       Result: {result}
     </>
   );
