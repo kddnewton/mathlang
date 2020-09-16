@@ -1,6 +1,5 @@
-import { Nodes, parse } from "mathlang";
+import { Nodes, parse } from "@mathlang/core";
 
-// Output a node to readable code
 const format = (node: Nodes.All, indent: string = ""): string => {
   switch (node.kind) {
     case "add":
