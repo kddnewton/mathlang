@@ -12,7 +12,7 @@
   "author": "Kevin Deisz",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^26.0.13",
+    "@types/jest": "^26.0.14",
     "@types/node": "^14.10.2",
     "jest": "^26.4.2",
     "ts-jest": "^26.3.0",
