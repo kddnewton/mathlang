@@ -6,6 +6,7 @@
     "build": "cp packages/playground/index.html docs/index.html && pushd packages/playground && yarn build",
     "compile": "tsc --noEmit",
     "math": "ts-node ./packages/cli/src/bin.ts",
+    "server": "pushd packages/server && yarn start",
     "start": "pushd packages/playground && yarn start",
     "test": "jest"
   },
