@@ -1,3 +1,4 @@
+import { number, setLocal, stmtList, program } from "./builders";
 import compiler from "./compiler";
 import optimizer from "./optimizer";
 import parser from "./parser";
@@ -24,8 +25,17 @@ export const evaluate = (source: string, options: Options = {}) => (
   virtualMachine(compile(source, options))
 );
 
+export const execute = (define: Nodes.Define, ...input: number[]) => {
+  const stmts: Nodes.Stmt[] = input.map((value, index) => (
+    setLocal(define.paramList.params[index].name, number(value))
+  ));
+
+  return virtualMachine(compiler(program(stmtList(stmts.concat(define.stmtList.stmts)))));
+};
+
 export const tokenize = tokenizer;
 
 export const typeCheck = (source: string) => typeChecker(parse(source));
 
+export { default as degree } from "./degree";
 export { Nodes } from "./types";

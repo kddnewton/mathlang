@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { evaluate } from "@mathlang/core";
 
 import Editor, { getEditorText, useEditorState } from "./Editor";
