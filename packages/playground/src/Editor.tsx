@@ -1,16 +1,31 @@
-import React, { useState, Dispatch, SetStateAction } from "react";
-import { Editor as DraftEditor, ContentState, EditorBlock, EditorState, KeyBindingUtil, getDefaultKeyBinding } from "draft-js";
+import React, { useRef, useState, Dispatch, SetStateAction } from "react";
+import { Editor as DraftEditor, ContentState, EditorBlock, EditorState, KeyBindingUtil, SelectionState, getDefaultKeyBinding } from "draft-js";
 import "draft-js/dist/Draft.css";
-
-export const useEditorState = (initial: string) => (
-  useState<EditorState>(() => (
-    EditorState.createWithContent(ContentState.createFromText(initial))
-  ))
-);
 
 export const getEditorText = (editorState: EditorState) => (
   editorState.getCurrentContent().getPlainText("\n")
 );
+
+export const useEditorState = (initial: string): [EditorState, Dispatch<SetStateAction<EditorState>>] => {
+  const [editorState, onChange] = useState<EditorState>(() => {
+    const current = EditorState.createWithContent(ContentState.createFromText(initial));
+
+    const blockMap = current.getCurrentContent().getBlockMap();
+    const key = blockMap.last().getKey();
+    const length = blockMap.last().getLength();
+
+    const selection = new SelectionState({
+      anchorKey: key,
+      anchorOffset: length,
+      focusKey: key,
+      focusOffset: length
+    });
+  
+    return EditorState.forceSelection(current, selection);
+  });
+
+  return [editorState, onChange];
+};
 
 type LineProps = React.ComponentProps<typeof EditorBlock>;
 
@@ -42,6 +57,19 @@ type EditorProps = {
 };
 
 const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) => {
+  const editorRef = useRef<DraftEditor>(null);
+  const [focused, setFocused] = useState(false);
+
+  const onFocus = () => setFocused(true);
+  const onBlur = () => setFocused(false);
+  const onClick = () => {
+    const editor = editorRef.current;
+
+    if (editor && !focused) {
+      editor.focus();
+    }
+  };
+
   const handleKeyCommand = (command: string) => {
     if (command === "evaluate") {
       onEvaluate();
@@ -51,13 +79,16 @@ const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) =>
   };
 
   return (
-    <div className="editor">
+    <div className="editor" onClick={onClick}>
       <DraftEditor
         blockRendererFn={blockRendererFn}
+        editorState={editorState}
         handleKeyCommand={handleKeyCommand}
         keyBindingFn={keyBindingFn}
-        editorState={editorState}
+        onBlur={onBlur}
         onChange={onChange}
+        onFocus={onFocus}
+        ref={editorRef}
       />
     </div>
   );
