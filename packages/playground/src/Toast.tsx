@@ -19,14 +19,14 @@ const ToastContext = React.createContext<ToastsContextValue>({
   onToastDismiss: () => {}
 });
 
-export const useToasts = () => useContext(ToastContext);
+export const useToast = () => useContext(ToastContext);
 
 type ToastAlertProps = {
   toast: Toast
 };
 
 const ToastAlert: React.FC<ToastAlertProps> = ({ toast }) => {
-  const { onToastDismiss } = useToasts();
+  const { onToastDismiss } = useToast();
 
   const [toastRef, onTriggerDismiss] = useDismissable<HTMLDivElement>(
     useCallback(() => onToastDismiss(toast), [onToastDismiss, toast])
@@ -49,7 +49,7 @@ const ToastAlert: React.FC<ToastAlertProps> = ({ toast }) => {
 };
 
 const Toasts: React.FC = () => {
-  const { toasts } = useToasts();
+  const { toasts } = useToast();
 
   return (
     <div aria-live="polite" aria-atomic="true" className="toasts">
@@ -63,7 +63,7 @@ const Toasts: React.FC = () => {
 let toastId = 0;
 const getNextToastId = () => ++toastId;
 
-export const ToastsProvider: React.FC = ({ children }) => {
+export const ToastProvider: React.FC = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const value = useMemo(

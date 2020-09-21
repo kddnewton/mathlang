@@ -2,7 +2,7 @@ import React from "react";
 import { evaluate } from "@mathlang/core";
 
 import Editor, { getEditorText, useEditorState } from "./Editor";
-import { ToastsProvider, useToasts } from "./Toasts";
+import { ToastProvider, useToast } from "./Toast";
 
 const GitHubLink = () => (
   <aside className="github-link">
@@ -18,17 +18,17 @@ const GitHubLink = () => (
 
 type NavProps = {
   onEvaluate: () => void,
-  onBookmark: () => void
+  onSave: () => void
 };
 
-const Nav: React.FC<NavProps> = ({ onEvaluate, onBookmark }) => (
+const Nav: React.FC<NavProps> = ({ onEvaluate, onSave }) => (
   <nav className="nav">
     <button type="button" title="Evaluate" onClick={onEvaluate}>
       <svg viewBox="5 5 24 24">
         <path d="M 11 9 L 24 16 L 11 23 z"></path>
       </svg>
     </button>
-    <button type="button" title="Bookmark" onClick={onBookmark}>
+    <button type="button" title="Save" onClick={onSave}>
       <svg viewBox="-50 -50 548 612">
         <path
           d="M433.941 129.941l-83.882-83.882A48 48 0 0 0 316.118 32H48C21.49 32 0 53.49 0 80v352c0 26.51 21.49 48 48 48h352c26.51 0 48-21.49 48-48V163.882a48 48 0 0 0-14.059-33.941zM224 416c-35.346 0-64-28.654-64-64 0-35.346 28.654-64 64-64s64 28.654 64 64c0 35.346-28.654 64-64 64zm96-304.52V212c0 6.627-5.373 12-12 12H76c-6.627 0-12-5.373-12-12V108c0-6.627 5.373-12 12-12h228.52c3.183 0 6.235 1.264 8.485 3.515l3.48 3.48A11.996 11.996 0 0 1 320 111.48z"
@@ -39,21 +39,30 @@ const Nav: React.FC<NavProps> = ({ onEvaluate, onBookmark }) => (
   </nav>
 );
 
+const storage = {
+  get() {
+    return location.hash ? decodeURI(location.hash.slice(1)) : "";
+  },
+  set(value: string) {
+    history.pushState(null, document.title, `#${encodeURI(value)}`);
+  }
+};
+
 const Content: React.FC = () => {
-  const [editorState, onChange] = useEditorState(location.hash ? decodeURI(location.hash.slice(1)) : "");
-  const { onToastCreate } = useToasts();
+  const [editorState, onChange] = useEditorState(storage.get());
+  const { onToastCreate } = useToast();
 
   const onEvaluate = () => {
     onToastCreate(evaluate(getEditorText(editorState)));
   };
 
-  const onBookmark = () => {
-    history.pushState(null, document.title, `#${encodeURI(getEditorText(editorState))}`);
+  const onSave = () => {
+    storage.set(getEditorText(editorState));
   };
 
   return (
     <div className="content">
-      <Nav onEvaluate={onEvaluate} onBookmark={onBookmark} />
+      <Nav onEvaluate={onEvaluate} onSave={onSave} />
       <Editor
         editorState={editorState}
         onChange={onChange}
@@ -64,10 +73,10 @@ const Content: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <ToastsProvider>
+  <ToastProvider>
     <GitHubLink />
     <Content />
-  </ToastsProvider>
+  </ToastProvider>
 );
 
 export default App;
