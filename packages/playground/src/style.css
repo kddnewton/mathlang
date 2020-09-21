@@ -1,4 +1,10 @@
+:root {
+  --primary: #4caf50;
+}
+
 body {
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  line-height: 1.3rem;
   margin: 0;
   font-size: 16px;
 }
@@ -53,4 +59,82 @@ body {
 
 .line-text {
   margin-left: 2em;
+}
+
+.toasts {
+  bottom: 3em;
+  display: flex;
+  flex-direction: column-reverse;
+  height: 0;
+  left: 50%;
+  position: fixed;
+  z-index: 1;
+}
+
+.toast {
+  align-items: center;
+  background-color: var(--primary);
+  border-radius: 4px;
+  box-shadow: 0px 3px 5px -1px rgba(0, 0, 0, 0.2),
+    0px 6px 10px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 18px 0px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  color: white;
+  display: flex;
+  font-size: 0.9em;
+  left: -50%;
+  margin-bottom: 1rem;
+  min-width: 25vw;
+  padding: 0.5rem 1rem;
+  position: relative;
+  width: 100%;
+}
+
+.toast--status {
+  margin-right: 0.5rem;
+}
+
+.toast--dismiss {
+  background: transparent;
+  border: 0;
+  color: currentColor;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.1em;
+  line-height: inherit;
+  margin: 0 0 0 auto;
+  padding: 0.2rem 0.5rem;
+}
+
+.dismissable-show,
+.dismissable-hide {
+  animation: dismissable .4s forwards;
+}
+
+.dismissable-hide {
+  animation-direction: reverse;
+}
+
+@keyframes dismissable {
+  0% {
+    animation-timing-function: ease-in;
+    opacity: 0;
+    transform: translate3d(0, calc(200% + 30px), 0) scale3d(0, 1, 1);
+  }
+
+  40% {
+    animation-timing-function: ease-out;
+    opacity: .5;
+    transform: translate3d(0, 0, 0) scale3d(.02, 1.1, 1);
+  }
+
+  70% {
+    opacity: .6;
+    transform: translate3d(0, -40px, 0) scale3d(.8, 1.1, 1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
 }

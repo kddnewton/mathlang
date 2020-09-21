@@ -2,6 +2,7 @@ import React from "react";
 import { evaluate } from "@mathlang/core";
 
 import Editor, { getEditorText, useEditorState } from "./Editor";
+import { Toasts, ToastsProvider, useToasts } from "./Toasts";
 
 type NavProps = {
   onEvaluate: () => void
@@ -20,20 +21,22 @@ const Nav: React.FC<NavProps> = ({ onEvaluate }) => (
 
 const App: React.FC = () => {
   const [editorState, onChange] = useEditorState();
+  const toasts = useToasts();
 
   const onEvaluate = () => {
-    alert(evaluate(getEditorText(editorState)));
+    toasts.onToastCreate(evaluate(getEditorText(editorState)));
   };
 
   return (
-    <>
+    <ToastsProvider value={toasts}>
       <Nav onEvaluate={onEvaluate} />
       <Editor
         editorState={editorState}
         onChange={onChange}
         onEvaluate={onEvaluate}
       />
-    </>
+      <Toasts />
+    </ToastsProvider>
   );
 };
 
