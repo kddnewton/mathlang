@@ -2,15 +2,9 @@ import React, { useState, Dispatch, SetStateAction } from "react";
 import { Editor as DraftEditor, ContentState, EditorBlock, EditorState, KeyBindingUtil, getDefaultKeyBinding } from "draft-js";
 import "draft-js/dist/Draft.css";
 
-const defaultText = `f(x) = 2x
-g(x) = x^2 + 1
-
-f(g(5)) / 2
-`;
-
-export const useEditorState = () => (
+export const useEditorState = (initial: string) => (
   useState<EditorState>(() => (
-    EditorState.createWithContent(ContentState.createFromText(defaultText))
+    EditorState.createWithContent(ContentState.createFromText(initial))
   ))
 );
 
@@ -57,13 +51,15 @@ const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) =>
   };
 
   return (
-    <DraftEditor
-      blockRendererFn={blockRendererFn}
-      handleKeyCommand={handleKeyCommand}
-      keyBindingFn={keyBindingFn}
-      editorState={editorState}
-      onChange={onChange}
-    />
+    <div className="editor">
+      <DraftEditor
+        blockRendererFn={blockRendererFn}
+        handleKeyCommand={handleKeyCommand}
+        keyBindingFn={keyBindingFn}
+        editorState={editorState}
+        onChange={onChange}
+      />
+    </div>
   );
 };
 

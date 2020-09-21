@@ -1,5 +1,10 @@
 :root {
-  --primary: #4caf50;
+  --primary: #868e96;
+}
+
+html,
+body {
+  min-height: 100vh;
 }
 
 body {
@@ -9,40 +14,72 @@ body {
   font-size: 16px;
 }
 
-.nav {
-  align-items: center;
-  background: linear-gradient(#f7f7f7,#e2e2e2);
-  border-bottom: 1px solid #d0d0d0;
+#main {
+  min-height: 100vh;
+}
+
+.github-link {
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+.content {
   display: flex;
-  flex: 1;
-  padding: 0.5rem 1rem;
+  min-height: inherit;
 }
 
-.nav h1 {
-  font-size: 1.2rem;
-  font-weight: normal;
-  margin: 0;
-  padding: 0;
+.nav {
+  background-color: var(--primary);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: inherit;
+  padding: 0.5rem 0;
 }
 
-.evaluate {
-  background: linear-gradient(#fdfdfd,#d2d3d6);
-  border-radius: 17px;
-  border: 1px solid rgba(0,0,0,.25);
-  box-shadow: 0 1px 0 #fff;
+.nav button {
+  background: transparent;
+  border: 0;
+  border-left: transparent solid 2px;
+  border-right: transparent solid 2px;
+  border-radius: 0;
+  box-sizing: border-box;
+  color: currentColor;
   cursor: pointer;
-  fill: #444;
-  height: 34px;
+  font-family: inherit;
+  line-height: inherit;
   margin: 0;
-  margin-left: 1rem;
-  padding: 0;
+  padding: 0 0.5rem;
+}
+
+.nav svg {
+  height: 34px;
   width: 34px;
 }
 
-.DraftEditor-root {
+.nav path {
+  fill: none;
+  stroke: currentColor;
+}
+
+.nav button:active,
+.nav button:focus,
+.nav button:hover {
+  color: white;
+  outline: none;
+}
+
+.nav button:active,
+.nav button:focus {
+  border-left-color: white;
+}
+
+.editor {
   font-family: monospace;
+  flex-grow: 1;
   min-height: 40rem;
-  padding: 1rem;
+  padding: 0.5rem 1rem;
 }
 
 .line {
