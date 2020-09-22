@@ -33,7 +33,7 @@ const tokenizer = (input: string) => {
 
   for (const match of matches) {
     if (match.index === undefined || match.index > loc.pos) {
-      throw new TypeError(`Unable to parse: ${source[loc.pos]}`);
+      throw new SyntaxError(source[loc.pos]);
     }
 
     const groups = match.groups || {};
@@ -70,7 +70,7 @@ const tokenizer = (input: string) => {
   }
 
   if (loc.pos < source.length) {
-    throw new TypeError(`Unable to parse: ${source[loc.pos]}`);
+    throw new SyntaxError(source[loc.pos]);
   }
 
   return tokens;

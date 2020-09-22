@@ -4,7 +4,8 @@ declare global {
   namespace jest {
     interface Matchers<R> {
       toBeNumber(value: number): CustomMatcherResult,
-      toBeOfKind(value: string): CustomMatcherResult
+      toBeOfKind(kind: string): CustomMatcherResult,
+      toFailTokenization(): CustomMatcherResult
     }
   }
 }
@@ -32,6 +33,20 @@ expect.extend({
       message: () => `Expected: ${kind}\nReceived: ${token.kind}`,
       pass: token.kind === kind
     }
+  },
+  toFailTokenization(received) {
+    let failed = false;
+
+    try {
+      tokenizer(received);
+    } catch (error) {
+      failed = true;
+    }
+
+    return {
+      message: () => `Expected ${received} to fail tokenization`,
+      pass: failed
+    };
   }
 });
 
@@ -57,6 +72,12 @@ describe("tokenizer", () => {
 
     test.each(cases)("%s", (special) => {
       expect(special).toBeOfKind(special);
+    });
+  });
+
+  describe("failures", () => {
+    test("fails to parse comparison operators", () => {
+      expect(">").toFailTokenization();
     });
   });
 });
