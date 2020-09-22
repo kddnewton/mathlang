@@ -4,8 +4,10 @@ A small language I'm writing to learn more about compilers/virtual machines/opti
 
 ## Roadmap
 
+- [ ] Playground plotting
 - [ ] Playground backend
-- [ ] Language server
+- [ ] Playground operator ligatures
+- [ ] Language server (https://github.com/microsoft/vscode-extension-samples/tree/master/lsp-sample)
 - [ ] Inline function optimizer
 - [ ] Conditionals
 - [ ] Units on numbers
