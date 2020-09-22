@@ -1,6 +1,7 @@
 import React, { useRef, useState, Dispatch, SetStateAction } from "react";
 import { Editor as DraftEditor, ContentState, EditorBlock, EditorState, KeyBindingUtil, SelectionState, getDefaultKeyBinding } from "draft-js";
 import "draft-js/dist/Draft.css";
+import { Nodes } from "@mathlang/core";
 
 export const getEditorText = (editorState: EditorState) => (
   editorState.getCurrentContent().getPlainText("\n")
@@ -52,34 +53,31 @@ const keyBindingFn = (event: React.KeyboardEvent) => {
 
 type EditorTrackerProps = {
   onFocus: () => void,
-  onPlot: (source: string) => void
+  onPlot: (define: Nodes.Define | null) => void
 };
 
-// const lines = {
-//   1: "f(x) = 2x"
-// }
+// TODO - pull this in from the editor
+const lines: { [lineNumber: number]: Nodes.Define } = {};
 
 const EditorTracker: React.FC<EditorTrackerProps> = ({ children, onFocus, onPlot }) => {
-  // const getLineNumber = (event: React.MouseEvent) => {
-  //   const node = ((event.target as HTMLDivElement).closest(".line"));
-  //   if (node) {
-  //     return parseInt(node.getAttribute("data-line-number") || "", 10);
-  //   }
-  // };
+  const getLineNumber = (event: React.MouseEvent) => {
+    const node = ((event.target as HTMLDivElement).closest(".line"));
+    if (node) {
+      return parseInt(node.getAttribute("data-line-number") || "", 10);
+    }
+  };
 
   const onClick = () => {
     onFocus();
   };
 
-  // const onMouseOver = (event: React.MouseEvent) => {
-  //   const lineNumber = getLineNumber(event);
-  //   if (lineNumber && lineNumber === 1) {
-  //     onPlot(lines[lineNumber]);
-  //   }
-  // };
+  const onMouseOver = (event: React.MouseEvent) => {
+    const lineNumber = getLineNumber(event);
+    onPlot(lineNumber ? (lines[lineNumber] || null) : null);
+  };
 
   return (
-    <div className="editor" onClick={onClick}>
+    <div className="editor" onClick={onClick} onMouseOver={onMouseOver}>
       {children}
     </div>
   )
@@ -89,7 +87,7 @@ type EditorProps = {
   editorState: EditorState,
   onChange: Dispatch<SetStateAction<EditorState>>,
   onEvaluate: () => void,
-  onPlot: (source: string) => void
+  onPlot: (define: Nodes.Define | null) => void
 };
 
 const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate, onPlot }) => {

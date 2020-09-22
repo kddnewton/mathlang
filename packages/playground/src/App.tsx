@@ -4,6 +4,7 @@ import { evaluate, parse, Nodes } from "@mathlang/core";
 import Editor, { getEditorText, useEditorState } from "./Editor";
 import { ToastProvider, useToast } from "./Toast";
 import Plot from "./Plot";
+import CopyableButton from "./CopyableButton";
 
 const GitHubLink = () => (
   <aside className="github-link">
@@ -59,12 +60,10 @@ const Content: React.FC = () => {
 
   const onSave = () => {
     storage.set(getEditorText(editorState));
+    onToastCreate(<>Saved link: <CopyableButton>{document.location.toString()}</CopyableButton></>);
   };
 
   const [plot, setPlot] = useState<Nodes.Define | null>(null);
-  const onPlot = (source: string) => {
-    setPlot(parse(source).stmtList.stmts[0] as Nodes.Define);
-  };
 
   return (
     <div className="content">
@@ -73,7 +72,7 @@ const Content: React.FC = () => {
         editorState={editorState}
         onChange={onChange}
         onEvaluate={onEvaluate}
-        onPlot={onPlot}
+        onPlot={setPlot}
       />
       {plot && <Plot define={plot} />}
     </div>
