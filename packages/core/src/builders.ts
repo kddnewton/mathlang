@@ -8,6 +8,7 @@ export const exponentiate = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Exponen
 export const getLocal = (name: string): Nodes.GetLocal => ({ kind: "getLocal", name, meta: {} });
 export const modulo = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Modulo => ({ kind: "modulo", left, right, meta: {} });
 export const multiply = (left: Nodes.Expr, right: Nodes.Expr): Nodes.Multiply => ({ kind: "multiply", left, right, meta: {} });
+export const negate = (value: Nodes.Expr): Nodes.Negate => ({ kind: "negate", value, meta: {} });
 export const number = (value: number): Nodes.Number => ({ kind: "number", value, meta: {} });
 export const param = (name: string): Nodes.Param => ({ kind: "param", name, meta: {} });
 export const paramList = (params: Nodes.Param[]) => ({ kind: "paramList" as const, params, meta: {} });

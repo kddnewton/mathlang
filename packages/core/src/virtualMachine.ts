@@ -64,6 +64,9 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
         case "multiply":
           stack.push(stack.pop() * stack.pop());
           break;
+        case "negate":
+          stack.push(stack.pop() * -1);
+          break;
         case "setLocal":
           locals[stack.pop()] = stack.pop();
           break;

@@ -51,6 +51,11 @@ const contextVisitor: Visitor = {
   exponentiate: binaryContextVisitor,
   modulo: binaryContextVisitor,
   multiply: binaryContextVisitor,
+  negate: {
+    enter(node) {
+      node.value.meta.context = node.meta.context;
+    }
+  },
   setLocal: {
     enter(node) {
       node.value.meta.context = node.meta.context;
@@ -158,6 +163,15 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
     },
     modulo: binary("modulo"),
     multiply: binary("multiply"),
+    negate: {
+      enter(node) {
+        graph.add(node.meta);
+        node.meta.kind = "Number";
+      },
+      exit(node) {
+        graph.connect(node.value.meta, node.meta);
+      }
+    },
     number: {
       enter(node) {
         graph.add(node.meta);

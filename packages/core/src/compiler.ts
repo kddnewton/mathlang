@@ -21,6 +21,8 @@ const compiler = (node: Nodes.All): Insns.All[] => {
       return compiler(node.right).concat(compiler(node.left)).concat({ kind: "modulo" });
     case "multiply":
       return compiler(node.right).concat(compiler(node.left)).concat({ kind: "multiply" });
+    case "negate":
+      return compiler(node.value).concat({ kind: "negate" });
     case "number":
       return [node.value];
     case "program":

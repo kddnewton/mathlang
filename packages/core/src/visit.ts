@@ -29,6 +29,7 @@ const visit = (node: Nodes.Program, visitor: Visitor): void => {
       case "program":
         visitNode(node.stmtList);
         break;
+      case "negate":
       case "setLocal":
         visitNode(node.value);
         break;

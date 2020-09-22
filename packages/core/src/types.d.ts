@@ -35,6 +35,7 @@ export declare namespace Nodes {
   type GetLocal = Node<"getLocal", { name: string }>;
   type Modulo = Node<"modulo", { left: Expr, right: Expr }>;
   type Multiply = Node<"multiply", { left: Expr, right: Expr }>;
+  type Negate = Node<"negate", { value: Expr }>;
   type Number = Node<"number", { value: number }>;
   type Param = Node<"param", { name: string }>;
   type ParamList = Node<"paramList", { params: Param[] }>;
@@ -44,7 +45,7 @@ export declare namespace Nodes {
   type Subtract = Node<"subtract", { left: Expr, right: Expr }>;
 
   type Binary = Add | Subtract | Multiply | Divide | Exponentiate | Modulo;
-  type Expr = Binary | Call | GetLocal | Number;
+  type Expr = Binary | Call | GetLocal | Negate | Number;
   type Stmt = Define | Expr | SetLocal;
 
   type All = Stmt | StmtList | Program;
@@ -61,11 +62,12 @@ export declare namespace Insns {
   type GetLocal = Insn<"getLocal">;
   type Modulo = Insn<"modulo">;
   type Multiply = Insn<"multiply">;
+  type Negate = Insn<"negate">;
   type SetLocal = Insn<"setLocal">;
   type Subtract = Insn<"subtract">;
   
   type Binary = Add | Subtract | Multiply | Divide | Exponentiate | Modulo;
-  type Operation = Binary | Call | Define | GetLocal | SetLocal;
+  type Operation = Binary | Call | Define | GetLocal | Negate | SetLocal;
   type Operand = string | number;
 
   type All = Operation | Operand | All[];

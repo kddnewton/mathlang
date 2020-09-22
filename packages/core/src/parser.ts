@@ -1,5 +1,5 @@
 import { Nodes, Tokens } from "./types";
-import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, number, param, paramList, program, setLocal, stmtList, subtract } from "./builders";
+import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, negate, number, param, paramList, program, setLocal, stmtList, subtract } from "./builders";
 
 /**
  * Grammar:
@@ -14,7 +14,7 @@ import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, nu
  * Expr -> Term ((Plus | Minus) Expr)*
  * Term -> Power ((Times | Over) Term)*
  * Power -> Value (ToThe Power)*
- * Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
+ * Value -> LParen Expr RParen | Minus Expr | Number GetLocal | Call | GetLocal | Number
  * Call -> Name LParen ArgList? RParen
  * ArgList -> Expr (Comma ArgList)*
  * GetLocal -> Name
@@ -112,7 +112,7 @@ function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call
   };
 }
 
-// Value -> LParen Expr RParen | Number GetLocal | Call | GetLocal | Number
+// Value -> LParen Expr RParen | Minus Expr | Number GetLocal | Call | GetLocal | Number
 function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const firstToken = tokens[current];
   const secondToken = tokens[current + 1];
@@ -122,6 +122,14 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
 
     if (consumed && matchRParen(tokens[current + 1 + consumed.size])) {
       return { node: consumed.node, size: consumed.size + 2 };
+    }
+  }
+
+  if (matchMinus(firstToken)) {
+    const consumed = consumeExpr(tokens, current + 1);
+
+    if (consumed) {
+      return { node: negate(consumed.node), size: 1 + consumed.size };
     }
   }
 

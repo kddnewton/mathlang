@@ -30,6 +30,8 @@ const format = (node: Nodes.All, indent: string = ""): string => {
       }
 
       return `${indent}${format(node.left)} * ${format(node.right)}`;
+    case "negate":
+      return `${indent}-${format(node.value)}`;
     case "number":
       return `${indent}${node.value}`;
     case "setLocal":

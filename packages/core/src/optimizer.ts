@@ -1,5 +1,5 @@
 import { Nodes } from "./types";
-import { add, call, define, divide, exponentiate, modulo, multiply, number, program, setLocal, stmtList, subtract } from "./builders";
+import { add, call, define, divide, exponentiate, modulo, multiply, negate, number, program, setLocal, stmtList, subtract } from "./builders";
 
 type Optimizer = Partial<{ [T in Nodes.All["kind"]]: (node: Nodes.All & { kind: T }) => Nodes.All | undefined }>;
 
@@ -25,6 +25,8 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
         return optimizeNode(modulo(visitNode(node.left), visitNode(node.right)));
       case "multiply":
         return optimizeNode(multiply(visitNode(node.left), visitNode(node.right)));
+      case "negate":
+        return optimizeNode(negate(visitNode(node.value)));
       case "program":
         return optimizeNode(program(visitNode(node.stmtList)));
       case "setLocal":

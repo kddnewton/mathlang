@@ -36,6 +36,8 @@ const degree = (define: Nodes.Define): number => {
         }
         return Math.abs(left) > Math.abs(right) ? left : right;
       }
+      case "negate":
+        return getDegree(node.value);
       case "number":
         return 0;
       case "getLocal":
