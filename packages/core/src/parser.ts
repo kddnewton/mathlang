@@ -12,8 +12,8 @@ import { add, assign, call, define, divide, exponentiate, modulo, multiply, nega
  * ParamList -> Name (Comma ParamList)*
  * Assign -> Name Equals Expr
  * Expr -> Term ((Plus | Minus) Expr)*
- * Term -> Power ((Times | Over) Term)*
- * Power -> Value (ToThe Power)*
+ * Term -> Power ((Star | Slash) Term)*
+ * Power -> Value (Caret Power)*
  * Value -> LParen Expr RParen | Minus Expr | Number Variable | Call | Variable | Number
  * Call -> Name LParen ArgList? RParen
  * ArgList -> Expr (Comma ArgList)*
@@ -40,18 +40,18 @@ const makeMatcher = <T extends Tokens.All>(type: T["kind"]) => (token: Tokens.Al
 const matchNewLine = makeMatcher<Tokens.NewLine>("newline");
 const matchName = makeMatcher<Tokens.Name>("name");
 const matchNumber = makeMatcher<Tokens.Number>("number");
-const matchLParen = makeMatcher<Tokens.LParen>("lparen");
-const matchRParen = makeMatcher<Tokens.RParen>("rparen");
-const matchLBrace = makeMatcher<Tokens.LBrace>("lbrace");
-const matchRBrace = makeMatcher<Tokens.RBrace>("rbrace");
-const matchComma = makeMatcher<Tokens.Comma>("comma");
-const matchEquals = makeMatcher<Tokens.Equals>("equals");
-const matchPlus = makeMatcher<Tokens.Plus>("plus");
-const matchMinus = makeMatcher<Tokens.Minus>("minus");
-const matchTimes = makeMatcher<Tokens.Times>("times");
-const matchOver = makeMatcher<Tokens.Over>("over");
-const matchMod = makeMatcher<Tokens.Mod>("mod");
-const matchToThe = makeMatcher<Tokens.ToThe>("tothe");
+const matchLParen = makeMatcher<Tokens.LParen>("(");
+const matchRParen = makeMatcher<Tokens.RParen>(")");
+const matchLBrace = makeMatcher<Tokens.LBrace>("{");
+const matchRBrace = makeMatcher<Tokens.RBrace>("}");
+const matchComma = makeMatcher<Tokens.Comma>(",");
+const matchEquals = makeMatcher<Tokens.Equals>("=");
+const matchPlus = makeMatcher<Tokens.Plus>("+");
+const matchMinus = makeMatcher<Tokens.Minus>("-");
+const matchStar = makeMatcher<Tokens.Star>("*");
+const matchSlash = makeMatcher<Tokens.Slash>("/");
+const matchPercent = makeMatcher<Tokens.Percent>("%");
+const matchCaret = makeMatcher<Tokens.Caret>("^");
 
 // Number
 function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Number> {
@@ -140,14 +140,14 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
 };
 
-// Power -> Value (ToThe Power)*
+// Power -> Value (Caret Power)*
 function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumeValue(tokens, current);
   if (!leftConsumed) {
     return null;
   }
 
-  if (!matchToThe(tokens[current + leftConsumed.size])) {
+  if (!matchCaret(tokens[current + leftConsumed.size])) {
     return leftConsumed;
   }
 
@@ -159,7 +159,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   };
 }
 
-// Term -> Power ((Times | Over | Mod) Power)*
+// Term -> Power ((Star | Slash | Percent) Power)*
 function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr> {
   const leftConsumed = consumePower(tokens, current);
   if (!leftConsumed) {
@@ -167,9 +167,9 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   if (
-    !matchTimes(tokens[current + leftConsumed.size]) &&
-    !matchOver(tokens[current + leftConsumed.size]) &&
-    !matchMod(tokens[current + leftConsumed.size])
+    !matchStar(tokens[current + leftConsumed.size]) &&
+    !matchSlash(tokens[current + leftConsumed.size]) &&
+    !matchPercent(tokens[current + leftConsumed.size])
   ) {
     return leftConsumed;
   }
@@ -178,10 +178,10 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   let builder;
 
   switch (tokens[current + leftConsumed.size].kind) {
-    case "times":
+    case "*":
       builder = multiply;
       break;
-    case "over":
+    case "/":
       builder = divide;
       break;
     default:
@@ -207,7 +207,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   const rightConsumed = consume(consumeExpr, tokens, current + 1 + leftConsumed.size);
-  const builder = tokens[current + leftConsumed.size].kind === "plus" ? add : subtract;
+  const builder = tokens[current + leftConsumed.size].kind === "+" ? add : subtract;
 
   return {
     node: builder(leftConsumed.node, rightConsumed.node),

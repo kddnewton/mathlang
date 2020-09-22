@@ -4,25 +4,13 @@ export const isNumber = (token: Tokens.All): token is Tokens.Number => (
   token.kind === "number"
 );
 
-const mapped: { [key: string]: (Tokens.Symbol | Tokens.Operator)["kind"] } = {
-  ",": "comma",
-  "=": "equals",
-  "{": "lbrace",
-  "(": "lparen",
-  "-": "minus",
-  "%": "mod",
-  "/": "over",
-  "+": "plus",
-  "}": "rbrace",
-  ")": "rparen",
-  "*": "times",
-  "^": "tothe"
-};
+type Special = (Tokens.Symbol | Tokens.Operator)["kind"];
+const specials: Special[] = ["+", "-", "*", "/", "%", "^", ",", "=", "{", "}", "(", ")"];
 
 const pieces = {
   newline: "\\n+",
   whitespace: "\\s+",
-  mapped: `[${Object.keys(mapped).join("").replace("-", "\\-")}]`,
+  special: `[${specials.join("").replace("-", "\\-")}]`,
   nonDecNumber: "0(b[0-1]+|o[0-7]+|x[0-9a-f]+)",
   decNumber: "(\\d+(?:,\\d{3})*(?:\\.\\d+)?)(?:[Ee](\\d+))?",
   name: "[a-z][0-9a-zA-Z]*"
@@ -55,8 +43,8 @@ const tokenizer = (input: string) => {
       loc.line += groups.newline.length;
     } else if (groups.whitespace) {
       // skip straight over whitespace
-    } else if (groups.mapped) {
-      tokens.push({ kind: mapped[groups.mapped], loc: { ...loc } });
+    } else if (groups.special) {
+      tokens.push({ kind: groups.special as Special, loc: { ...loc } });
     } else if (groups.nonDecNumber) {
       const [full, digits] = nonDecNumberPattern.exec(groups.nonDecNumber);
 

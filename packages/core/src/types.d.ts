@@ -2,25 +2,27 @@ export declare namespace Tokens {
   type Loc = { line: number, col: number, pos: number };
   type Token<K, V = undefined> = { kind: K, loc: Loc } & (V extends undefined ? {} : V);
 
-  type Comma = Token<"comma">;
-  type Equals = Token<"equals">;
-  type LBrace = Token<"lbrace">;
-  type LParen = Token<"lparen">;
-  type Minus = Token<"minus">;
-  type Mod = Token<"mod">;
+  type Plus = Token<"+">;
+  type Minus = Token<"-">;
+  type Star = Token<"*">;
+  type Slash = Token<"/">;
+  type Percent = Token<"%">;
+  type Caret = Token<"^">;
+  type Operator = Plus | Minus | Star | Slash | Percent| Caret;
+  
+  type Comma = Token<",">;
+  type Equals = Token<"=">;
+  type LBrace = Token<"{">;
+  type RBrace = Token<"}">;
+  type LParen = Token<"(">;
+  type RParen = Token<")">;
+  type Symbol = Comma | Equals | LBrace | RBrace | LParen | RParen;
+  
   type Name = Token<"name", { value: string }>;
   type NewLine = Token<"newline">;
   type Number = Token<"number", { value: number, source: string }>;
-  type Over = Token<"over">;
-  type Plus = Token<"plus">;
-  type RBrace = Token<"rbrace">;
-  type RParen = Token<"rparen">;
-  type Times = Token<"times">;
-  type ToThe = Token<"tothe">;
 
-  type Symbol = Comma | Equals | LBrace | LParen | RBrace | RParen;
-  type Operator = Minus | Mod | Over | Plus | Times | ToThe;
-  type All = Name | NewLine | Number | Operator | Symbol;
+  type All = Operator | Symbol | Name | NewLine | Number;
 }
 
 export declare namespace Nodes {
