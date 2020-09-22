@@ -63,7 +63,7 @@ const tokenizer = (input: string) => {
       const bases = { "b": 2, "o": 8, "x": 16 };
       let value = parseInt(digits.slice(1), bases[digits.charAt(0) as keyof typeof bases]);
 
-      tokens.push({ kind: "number", value, loc: { ...loc } });
+      tokens.push({ kind: "number", value, source: groups.nonDecNumber, loc: { ...loc } });
     } else if (groups.decNumber) {
       const [full, digits, power] = decNumberPattern.exec(groups.decNumber);
 
@@ -72,7 +72,7 @@ const tokenizer = (input: string) => {
         value *= Math.pow(10, parseInt(power, 10));
       }
 
-      tokens.push({ kind: "number", value, loc: { ...loc } });
+      tokens.push({ kind: "number", value, source: groups.decNumber, loc: { ...loc } });
     } else if (groups.name) {
       tokens.push({ kind: "name", value: groups.name, loc: { ...loc } });
     }

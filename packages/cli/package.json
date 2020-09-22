@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "@mathlang/core": "^0.1.0",
-    "@mathlang/format": "^0.1.0"
+    "prettier-plugin-mathlang": "^0.1.0"
   },
   "bin": {
     "math": "./src/bin.ts"

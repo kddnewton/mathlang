@@ -1,10 +1,11 @@
 {
-  "name": "@mathlang/format",
+  "name": "prettier-plugin-mathlang",
   "version": "0.1.0",
   "main": "src/index.ts",
   "author": "Kevin Deisz",
   "license": "MIT",
   "dependencies": {
-    "@mathlang/core": "^0.1.0"
+    "@mathlang/core": "^0.1.0",
+    "prettier": "^2.1.2"
   }
 }

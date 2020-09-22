@@ -58,7 +58,7 @@ function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Nu
   const token = tokens[current];
 
   if (matchNumber(token)) {
-    return { node: number(token.value), size: 1 };
+    return { node: number(token.value, token.source), size: 1 };
   }
   return null;
 }

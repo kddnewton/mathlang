@@ -3,7 +3,7 @@ import readline from "readline";
 import path from "path";
 
 import { evaluate, tokenize, typeCheck } from "@mathlang/core";
-import format from "@mathlang/format";
+import { format } from "prettier-plugin-mathlang";
 
 const readFile = (handle: string | number) => (
   fs.readFileSync(handle).toString("utf-8")

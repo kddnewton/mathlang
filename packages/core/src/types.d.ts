@@ -1,6 +1,6 @@
 export declare namespace Tokens {
   type Loc = { line: number, col: number, pos: number };
-  type Token<K, V = undefined> = { kind: K, loc: Loc } & (V extends undefined ? {} : { value: V });
+  type Token<K, V = undefined> = { kind: K, loc: Loc } & (V extends undefined ? {} : V);
 
   type Comma = Token<"comma">;
   type Equals = Token<"equals">;
@@ -8,9 +8,9 @@ export declare namespace Tokens {
   type LParen = Token<"lparen">;
   type Minus = Token<"minus">;
   type Mod = Token<"mod">;
-  type Name = Token<"name", string>;
+  type Name = Token<"name", { value: string }>;
   type NewLine = Token<"newline">;
-  type Number = Token<"number", number>;
+  type Number = Token<"number", { value: number, source: string }>;
   type Over = Token<"over">;
   type Plus = Token<"plus">;
   type RBrace = Token<"rbrace">;
@@ -36,7 +36,7 @@ export declare namespace Nodes {
   type Modulo = Node<"modulo", { left: Expr, right: Expr }>;
   type Multiply = Node<"multiply", { left: Expr, right: Expr }>;
   type Negate = Node<"negate", { value: Expr }>;
-  type Number = Node<"number", { value: number }>;
+  type Number = Node<"number", { source?: string, value: number }>;
   type Param = Node<"param", { name: string }>;
   type ParamList = Node<"paramList", { params: Param[] }>;
   type Program = Node<"program", { stmtList: StmtList }>;
