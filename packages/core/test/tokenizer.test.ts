@@ -3,7 +3,8 @@ import tokenizer, { isNumber } from "../src/tokenizer";
 declare global {
   namespace jest {
     interface Matchers<R> {
-      toBeNumber(value: number): CustomMatcherResult;
+      toBeNumber(value: number): CustomMatcherResult,
+      toBeOfKind(value: string): CustomMatcherResult
     }
   }
 }
@@ -23,45 +24,39 @@ expect.extend({
       message: () => `Expected ${value}\nReceived: ${token.value}`,
       pass: token.value === value
     }
+  },
+  toBeOfKind(received, kind) {
+    const token = tokenizer(received)[0];
+
+    return {
+      message: () => `Expected: ${kind}\nReceived: ${token.kind}`,
+      pass: token.kind === kind
+    }
   }
 });
 
 describe("tokenizer", () => {
   describe("number", () => {
-    test("parses binary numbers", () => {
-      expect("0b10").toBeNumber(2)
-    });
+    const cases: [string, number][] = [
+      ["0b10", 2],
+      ["0o10", 8],
+      ["0x10", 16],
+      ["10", 10],
+      ["10.10", 10.1],
+      ["10.10e2", 1010],
+      ["1,100,100", 1100100]
+    ];
 
-    test("parses octal numbers", () => {
-      expect("0o10").toBeNumber(8);
-    });
-
-    test("parses hexidecimal numbers", () => {
-      expect("0x10").toBeNumber(16);
-    });
-
-    test("parses decimal numbers", () => {
-      expect("10").toBeNumber(10);
-    });
-
-    test("parses decimal numbers with floating point", () => {
-      expect("10.10").toBeNumber(10.1);
-    });
-
-    test("parses decimal numbers with scientific notification", () => {
-      expect("10.10e2").toBeNumber(1010);
-    });
-  
-    test("parses numbers with commas", () => {
-      expect("1,100,100").toBeNumber(1100100);
+    test.each(cases)("%s => %d", (source, value) => {
+      expect(source).toBeNumber(value);
     });
   });
 
-  describe("mapped", () => {
-    test("parses correctly", () => {
-      const tokens = tokenizer("1-1");
+  describe("operators", () => {
+    const cases = ["+", "-", "*", "/", "%", "^", ",", "=", "{", "}", "(", ")"];
 
-      expect(tokens).toHaveLength(3);
+    test.each(cases)("%s", (special) => {
+      expect(special).toBeOfKind(special);
     });
   });
 });
