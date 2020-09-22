@@ -127,7 +127,7 @@ type PlotProps = Omit<React.SVGProps<SVGSVGElement>, PlotOmittedProps> & {
 };
 
 const Plot: React.FC<PlotProps> = ({ define, height = "300", width = "300", ...props }) => {
-  const bounds: Bounds = { minX: -5, maxX: 5, minY: -10, maxY: 10 };
+  const bounds: Bounds = { minX: -10, maxX: 10, minY: -10, maxY: 10 };
   const horizontalStrokeWidth = (bounds.maxX - bounds.minX) / 400;
   const verticalStrokeWidth = (bounds.maxY - bounds.minY) / 400;
 

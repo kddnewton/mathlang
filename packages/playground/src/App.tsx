@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
-import { evaluate } from "@mathlang/core";
+import React, { useState } from "react";
+import { evaluate, parse, Nodes } from "@mathlang/core";
 
 import Editor, { getEditorText, useEditorState } from "./Editor";
 import { ToastProvider, useToast } from "./Toast";
+import Plot from "./Plot";
 
 const GitHubLink = () => (
   <aside className="github-link">
@@ -60,6 +61,11 @@ const Content: React.FC = () => {
     storage.set(getEditorText(editorState));
   };
 
+  const [plot, setPlot] = useState<Nodes.Define | null>(null);
+  const onPlot = (source: string) => {
+    setPlot(parse(source).stmtList.stmts[0] as Nodes.Define);
+  };
+
   return (
     <div className="content">
       <Nav onEvaluate={onEvaluate} onSave={onSave} />
@@ -67,7 +73,9 @@ const Content: React.FC = () => {
         editorState={editorState}
         onChange={onChange}
         onEvaluate={onEvaluate}
+        onPlot={onPlot}
       />
+      {plot && <Plot define={plot} />}
     </div>
   );
 };

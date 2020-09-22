@@ -50,13 +50,49 @@ const keyBindingFn = (event: React.KeyboardEvent) => {
   return getDefaultKeyBinding(event);
 };
 
+type EditorTrackerProps = {
+  onFocus: () => void,
+  onPlot: (source: string) => void
+};
+
+// const lines = {
+//   1: "f(x) = 2x"
+// }
+
+const EditorTracker: React.FC<EditorTrackerProps> = ({ children, onFocus, onPlot }) => {
+  // const getLineNumber = (event: React.MouseEvent) => {
+  //   const node = ((event.target as HTMLDivElement).closest(".line"));
+  //   if (node) {
+  //     return parseInt(node.getAttribute("data-line-number") || "", 10);
+  //   }
+  // };
+
+  const onClick = () => {
+    onFocus();
+  };
+
+  // const onMouseOver = (event: React.MouseEvent) => {
+  //   const lineNumber = getLineNumber(event);
+  //   if (lineNumber && lineNumber === 1) {
+  //     onPlot(lines[lineNumber]);
+  //   }
+  // };
+
+  return (
+    <div className="editor" onClick={onClick}>
+      {children}
+    </div>
+  )
+};
+
 type EditorProps = {
   editorState: EditorState,
   onChange: Dispatch<SetStateAction<EditorState>>,
-  onEvaluate: () => void
+  onEvaluate: () => void,
+  onPlot: (source: string) => void
 };
 
-const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) => {
+const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate, onPlot }) => {
   const editorRef = useRef<DraftEditor>(null);
   const [focused, setFocused] = useState(false);
 
@@ -79,7 +115,7 @@ const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) =>
   };
 
   return (
-    <div className="editor" onClick={onClick}>
+    <EditorTracker onFocus={onClick} onPlot={onPlot}>
       <DraftEditor
         blockRendererFn={blockRendererFn}
         editorState={editorState}
@@ -90,7 +126,7 @@ const Editor: React.FC<EditorProps> = ({ editorState, onChange, onEvaluate }) =>
         onFocus={onFocus}
         ref={editorRef}
       />
-    </div>
+    </EditorTracker>
   );
 };
 
