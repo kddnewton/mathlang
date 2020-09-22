@@ -8,7 +8,7 @@ const degree = (define: Nodes.Define): number => {
   }
 
   const input = define.paramList.params[0].name;
-  const locals: { [name: string]: number } = { [input]: 1 };
+  const variables: { [name: string]: number } = { [input]: 1 };
 
   const getDegree = (node: Nodes.All): number => {
     switch (node.kind) {
@@ -40,10 +40,10 @@ const degree = (define: Nodes.Define): number => {
         return getDegree(node.value);
       case "number":
         return 0;
-      case "getLocal":
-        return locals[node.name];
-      case "setLocal":
-        locals[node.name] = getDegree(node.value);
+      case "variable":
+        return variables[node.name];
+      case "assign":
+        variables[node.name] = getDegree(node.value);
         return NaN;
       case "stmtList":
         let nodeDegree;

@@ -5,7 +5,7 @@ function isOperation(object: Insns.All): object is Insns.Operation {
   return Object.prototype.hasOwnProperty.call(object, "kind");
 }
 
-const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = {}): number => {
+const virtualMachine = (insns: Insns.All[], variables: { [key: string]: number } = {}): number => {
   const funcs: { [key: string]: (...args: number[]) => number } = {};
   const stack: any[] = [];
 
@@ -14,6 +14,9 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
       switch (insn.kind) {
         case "add":
           stack.push(stack.pop() + stack.pop());
+          break;
+        case "assign":
+          variables[stack.pop()] = stack.pop();
           break;
         case "call": {
           const name = stack.pop();
@@ -55,9 +58,6 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
         case "exponentiate":
           stack.push(Math.pow(stack.pop(), stack.pop()));
           break;
-        case "getLocal":
-          stack.push(locals[stack.pop()]);
-          break;
         case "modulo":
           stack.push(stack.pop() % stack.pop());
           break;
@@ -67,11 +67,11 @@ const virtualMachine = (insns: Insns.All[], locals: { [key: string]: number } = 
         case "negate":
           stack.push(stack.pop() * -1);
           break;
-        case "setLocal":
-          locals[stack.pop()] = stack.pop();
-          break;
         case "subtract":
           stack.push(stack.pop() - stack.pop());
+          break;
+        case "variable":
+          stack.push(variables[stack.pop()]);
           break;
       }
     } else {

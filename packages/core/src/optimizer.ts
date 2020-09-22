@@ -1,5 +1,5 @@
 import { Nodes } from "./types";
-import { add, call, define, divide, exponentiate, modulo, multiply, negate, number, program, setLocal, stmtList, subtract } from "./builders";
+import { add, assign, call, define, divide, exponentiate, modulo, multiply, negate, number, program, stmtList, subtract } from "./builders";
 
 type Optimizer = Partial<{ [T in Nodes.All["kind"]]: (node: Nodes.All & { kind: T }) => Nodes.All | undefined }>;
 
@@ -13,6 +13,8 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
     switch (node.kind) {
       case "add":
         return optimizeNode(add(visitNode(node.left), visitNode(node.right)));
+      case "assign":
+        return optimizeNode(assign(node.name, visitNode(node.value)));
       case "call":
         return optimizeNode(call(node.name, node.args.map((arg) => visitNode(arg))));
       case "define":
@@ -29,14 +31,12 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
         return optimizeNode(negate(visitNode(node.value)));
       case "program":
         return optimizeNode(program(visitNode(node.stmtList)));
-      case "setLocal":
-        return optimizeNode(setLocal(node.name, visitNode(node.value)));
       case "stmtList":
         return optimizeNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
       case "subtract":
         return optimizeNode(subtract(visitNode(node.left), visitNode(node.right)));
-      case "getLocal":
       case "number":
+      case "variable":
         return node as T;
     }
   }

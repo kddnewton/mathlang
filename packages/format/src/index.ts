@@ -46,6 +46,8 @@ const printNode = (path: FastPath<Nodes.All>, options: ParserOptions, print: (pa
   switch (node.kind) {
     case "add":
       return printAdd(path, print);
+    case "assign":
+      return concat([node.name, " = ", path.call(print, "value")]);
     case "call":
       return group(concat([
         node.name, "(",
@@ -71,12 +73,10 @@ const printNode = (path: FastPath<Nodes.All>, options: ParserOptions, print: (pa
       return printDivide(path, print);
     case "exponentiate":
       return printExponentiate(path, print);
-    case "getLocal":
-      return node.name;
     case "modulo":
       return printModulo(path, print);
     case "multiply":
-      if (node.left.kind === "number" && node.right.kind === "getLocal") {
+      if (node.left.kind === "number" && node.right.kind === "variable") {
         return concat([path.call(print, "left"), path.call(print, "right")]);
       }
       return printMultiply(path, print);
@@ -84,14 +84,14 @@ const printNode = (path: FastPath<Nodes.All>, options: ParserOptions, print: (pa
       return concat(["-", path.call(print, "value")]);
     case "number":
       return node.source || node.value.toString();
-    case "setLocal":
-      return concat([node.name, " = ", path.call(print, "value")]);
     case "program":
       return path.call(print, "stmtList");
     case "stmtList":
       return join(hardline, path.map(print, "stmts"));
     case "subtract":
       return printSubtract(path, print);
+    case "variable":
+      return node.name;
   }
 }
 

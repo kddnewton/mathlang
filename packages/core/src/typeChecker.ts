@@ -40,6 +40,11 @@ const binaryContextVisitor = {
 
 const contextVisitor: Visitor = {
   add: binaryContextVisitor,
+  assign: {
+    enter(node) {
+      node.value.meta.context = node.meta.context;
+    }
+  },
   call: {
     enter(node) {
       node.args.forEach((arg) => {
@@ -52,11 +57,6 @@ const contextVisitor: Visitor = {
   modulo: binaryContextVisitor,
   multiply: binaryContextVisitor,
   negate: {
-    enter(node) {
-      node.value.meta.context = node.meta.context;
-    }
-  },
-  setLocal: {
     enter(node) {
       node.value.meta.context = node.meta.context;
     }
@@ -123,6 +123,20 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
 
   const graphVisitor: Visitor = {
     add: binary("add"),
+    assign: {
+      enter(node) {
+        const meta = { kind: "Open" };
+        node.meta.context.locals[node.name] = meta;
+        graph.add(meta);
+
+        graph.add(node.meta);
+        node.meta.kind = "Open";
+      },
+      exit(node) {
+        graph.connect(node.value.meta, node.meta);
+        graph.connect(node.meta.context.locals[node.name], node.meta);
+      }
+    },
     call: {
       enter(node) {
         graph.add(node.meta);
@@ -152,15 +166,6 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
     },
     divide: binary("divide"),
     exponentiate: binary("exponentiate"),
-    getLocal: {
-      enter(node) {
-        graph.add(node.meta);
-        node.meta.kind = "Open";
-      },
-      exit(node) {
-        graph.connect(node.meta.context.locals[node.name], node.meta);
-      }
-    },
     modulo: binary("modulo"),
     multiply: binary("multiply"),
     negate: {
@@ -178,20 +183,6 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
         node.meta.kind = "Number";
       }
     },
-    setLocal: {
-      enter(node) {
-        const meta = { kind: "Open" };
-        node.meta.context.locals[node.name] = meta;
-        graph.add(meta);
-
-        graph.add(node.meta);
-        node.meta.kind = "Open";
-      },
-      exit(node) {
-        graph.connect(node.value.meta, node.meta);
-        graph.connect(node.meta.context.locals[node.name], node.meta);
-      }
-    },
     stmtList: {
       enter(node) {
         graph.add(node.meta);
@@ -201,7 +192,16 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
         graph.connect(node.stmts[node.stmts.length - 1].meta, node.meta);
       }
     },
-    subtract: binary("subtract")
+    subtract: binary("subtract"),
+    variable: {
+      enter(node) {
+        graph.add(node.meta);
+        node.meta.kind = "Open";
+      },
+      exit(node) {
+        graph.connect(node.meta.context.locals[node.name], node.meta);
+      }
+    }
   };
 
   return graphVisitor;

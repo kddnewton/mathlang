@@ -1,20 +1,20 @@
 import { Nodes, Tokens } from "./types";
-import { add, call, define, divide, exponentiate, getLocal, modulo, multiply, negate, number, param, paramList, program, setLocal, stmtList, subtract } from "./builders";
+import { add, assign, call, define, divide, exponentiate, modulo, multiply, negate, number, param, paramList, program, stmtList, subtract, variable } from "./builders";
 
 /**
  * Grammar:
  * 
  * Program -> StmtList
  * StmtList -> Stmt NewLine StmtList | Stmt
- * Stmt -> Define | SetLocal | Expr
+ * Stmt -> Assign | Define | Expr
  * Define -> Name LParen ParamList? RParen Equals LBrace NewLine StmtList RBrace
  *   | Name LParen ParamList? RParen Equals Stmt
  * ParamList -> Name (Comma ParamList)*
- * SetLocal -> Name Equals Expr
+ * Assign -> Name Equals Expr
  * Expr -> Term ((Plus | Minus) Expr)*
  * Term -> Power ((Times | Over) Term)*
  * Power -> Value (ToThe Power)*
- * Value -> LParen Expr RParen | Minus Expr | Number GetLocal | Call | GetLocal | Number
+ * Value -> LParen Expr RParen | Minus Expr | Number Variable | Call | Variable | Number
  * Call -> Name LParen ArgList? RParen
  * ArgList -> Expr (Comma ArgList)*
  * GetLocal -> Name
@@ -63,12 +63,12 @@ function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Nu
   return null;
 }
 
-// GetLocal -> Name
-function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.GetLocal> {
+// Variable -> Name
+function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.Variable> {
   const token = tokens[current];
 
   if (matchName(token)) {
-    return { node: getLocal(token.value), size: 1 };
+    return { node: variable(token.value), size: 1 };
   }
   return null;
 }
@@ -134,7 +134,7 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   }
 
   if (matchNumber(firstToken) && matchName(secondToken)) {
-    return { node: multiply(number(firstToken.value), getLocal(secondToken.value)), size: 2 };
+    return { node: multiply(number(firstToken.value), variable(secondToken.value)), size: 2 };
   }
 
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
@@ -275,7 +275,7 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
 }
 
 // SetLocal -> Name Equals Expr
-function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.SetLocal> {
+function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.Assign> {
   const token = tokens[current];
 
   if (!matchName(token) || !matchEquals(tokens[current + 1])) {
@@ -287,7 +287,7 @@ function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
     return null;
   }
 
-  return { node: setLocal(token.value, consumed.node), size: consumed.size + 2 };
+  return { node: assign(token.value, consumed.node), size: consumed.size + 2 };
 }
 
 // Stmt -> Define | SetLocal | Expr

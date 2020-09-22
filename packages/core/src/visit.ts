@@ -22,16 +22,16 @@ const visit = (node: Nodes.Program, visitor: Visitor): void => {
         visitNode(node.left);
         visitNode(node.right);
         break;
+      case "assign":
+      case "negate":
+        visitNode(node.value);
+        break;
       case "call":
         node.args.forEach(visitNode);
         break;
       case "define":
       case "program":
         visitNode(node.stmtList);
-        break;
-      case "negate":
-      case "setLocal":
-        visitNode(node.value);
         break;
       case "stmtList":
         node.stmts.forEach(visitNode);

@@ -1,4 +1,4 @@
-import { number, setLocal, stmtList, program } from "./builders";
+import { assign, number, stmtList, program } from "./builders";
 import compiler from "./compiler";
 import optimizer from "./optimizer";
 import parser from "./parser";
@@ -27,7 +27,7 @@ export const evaluate = (source: string, options: Options = {}) => (
 
 export const execute = (define: Nodes.Define, ...input: number[]) => {
   const stmts: Nodes.Stmt[] = input.map((value, index) => (
-    setLocal(define.paramList.params[index].name, number(value))
+    assign(define.paramList.params[index].name, number(value))
   ));
 
   return virtualMachine(compiler(program(stmtList(stmts.concat(define.stmtList.stmts)))));
