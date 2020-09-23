@@ -130,7 +130,7 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
         graph.add(meta);
 
         graph.add(node.meta);
-        node.meta.kind = "Open";
+        node.meta.kind = "Undefined";
       },
       exit(node) {
         graph.connect(node.value.meta, node.meta);
