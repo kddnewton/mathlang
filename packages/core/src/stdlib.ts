@@ -20,8 +20,7 @@ const stdlib = {
   subtract: (left: number, right: number) => left - right
 };
 
-export function isStdLib(key: string): key is keyof typeof stdlib {
-  return key in stdlib;
-}
+export type StdLib = typeof stdlib;
+export const isStdLib = (key: string): key is keyof StdLib => key in stdlib;
 
 export default stdlib;

@@ -1,9 +1,9 @@
 import { Nodes } from "./types";
-import visit, { Visitor } from "./visit";
+import { StdLib } from "./stdlib";
 
-type Node<T> = { value: T, lines: Node<T>[] };
+type GraphNode<T> = { value: T, lines: GraphNode<T>[] };
 class Graph<T> {
-  public nodes: Node<T>[];
+  public nodes: GraphNode<T>[];
 
   constructor() {
     this.nodes = [];
@@ -31,50 +31,9 @@ class Graph<T> {
 
 type FuncType = { params: Nodes.Meta[], returns: Nodes.Meta } & Nodes.Meta;
 
-const binaryContextVisitor = {
-  enter(node: Nodes.Binary) {
-    node.left.meta.context = node.meta.context;
-    node.right.meta.context = node.meta.context;
-  }
-};
+const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
+  const graph = new Graph<Nodes.Meta>();
 
-const contextVisitor: Visitor = {
-  add: binaryContextVisitor,
-  assign: {
-    enter(node) {
-      node.value.meta.context = node.meta.context;
-    }
-  },
-  call: {
-    enter(node) {
-      node.args.forEach((arg) => {
-        arg.meta.context = node.meta.context;
-      });
-    }
-  },
-  divide: binaryContextVisitor,
-  exponentiate: binaryContextVisitor,
-  modulo: binaryContextVisitor,
-  multiply: binaryContextVisitor,
-  negate: {
-    enter(node) {
-      node.value.meta.context = node.meta.context;
-    }
-  },
-  stmtList: {
-    enter(node) {
-      node.meta.locals = {} as { [key: string]: Nodes.Meta };
-      node.meta.funcs = {} as { [key: string]: Nodes.Meta };
-
-      node.stmts.forEach((stmt) => {
-        stmt.meta.context = node.meta;
-      });
-    }
-  },
-  subtract: binaryContextVisitor
-};
-
-const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
   const makeFunc = (paramTypes: string[], returnType: string): FuncType => {
     const meta: FuncType = { kind: "Function", params: [], returns: { kind: returnType } };
     graph.add(meta);
@@ -89,7 +48,7 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
     return meta;
   };
 
-  const stdlib = {
+  const stdlibTypes: { [T in keyof StdLib]: FuncType } = {
     add: makeFunc(["Number", "Number"], "Number"),
     divide: makeFunc(["Number", "Number"], "Number"),
     exponentiate: makeFunc(["Number", "Number"], "Number"),
@@ -103,115 +62,133 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
     subtract: makeFunc(["Number", "Number"], "Number")
   };
 
-  function isStdLib(key: string): key is keyof typeof stdlib {
-    return key in stdlib;
-  }
+  const isStdLib = (key: string): key is keyof typeof stdlibTypes => key in stdlibTypes;
 
-  const binary = (name: keyof typeof stdlib) => ({
-    enter(node: Nodes.Binary) {
-      graph.add(node.meta);
-      node.meta.kind = "Open";
-    },
-    exit(node: Nodes.Binary) {
-      const func = stdlib[name];
+  const visitor = (node: Nodes.All): void => {
+    switch (node.kind) {
+      case "add":
+      case "divide":
+      case "exponentiate":
+      case "modulo":
+      case "multiply":
+      case "subtract": {
+        graph.add(node.meta);
+        node.meta.kind = "Open";
 
-      graph.connect(node.left.meta, func.params[0]);
-      graph.connect(node.right.meta, func.params[1]);
-      graph.connect(func.returns, node.meta);
-    }
-  });
+        node.left.meta.context = node.meta.context;
+        node.right.meta.context = node.meta.context;
 
-  const graphVisitor: Visitor = {
-    add: binary("add"),
-    assign: {
-      enter(node) {
+        visitor(node.left);
+        visitor(node.right);
+
+        const func = stdlibTypes[node.kind];
+        graph.connect(node.left.meta, func.params[0]);
+        graph.connect(node.right.meta, func.params[1]);
+        graph.connect(func.returns, node.meta);
+
+        break;
+      }
+      case "assign": {
+        graph.add(node.meta);
+        node.meta.kind = "Undefined";
+
+        node.value.meta.context = node.meta.context;
+
         const meta = { kind: "Open" };
         node.meta.context.locals[node.name] = meta;
         graph.add(meta);
 
-        graph.add(node.meta);
-        node.meta.kind = "Undefined";
-      },
-      exit(node) {
+        visitor(node.value);
+
         graph.connect(node.value.meta, node.meta);
         graph.connect(node.meta.context.locals[node.name], node.meta);
+
+        break;
       }
-    },
-    call: {
-      enter(node) {
+      case "call": {
         graph.add(node.meta);
         node.meta.kind = "Open";
-      },
-      exit(node) {
-        const func: FuncType = isStdLib(node.name) ? stdlib[node.name] : node.meta.context.funcs[node.name];
 
+        node.args.forEach((arg) => {
+          arg.meta.context = node.meta.context;
+        });
+
+        node.args.forEach(visitor);
+  
+        const func: FuncType = isStdLib(node.name) ? stdlibTypes[node.name] : node.meta.context.funcs[node.name];
         func.params.forEach((param, index) => {
           graph.connect(node.args[index].meta, param);
         });
 
         graph.connect(func.returns, node.meta);
+
+        break;
       }
-    },
-    define: {
-      enter(node) {
+      case "define": {
+        graph.add(node.meta);
+        node.meta.kind = "Undefined";
+
         const meta = makeFunc(node.paramList.params.map(() => "Open"), "Open");
         node.meta.context.funcs[node.name] = meta;
 
+        visitor(node.stmtList);
+
+        graph.connect(node.stmtList.meta, node.meta.context.funcs[node.name].returns);
+
+        break;
+      }
+      case "negate":
+        graph.add(node.meta);
+        node.meta.kind = "Number";
+
+        node.value.meta.context = node.meta.context;
+
+        visitor(node.value);
+
+        graph.connect(node.value.meta, node.meta);
+
+        break;
+      case "number":
+        graph.add(node.meta);
+        node.meta.kind = "Number";
+
+        break;
+      case "program":
         graph.add(node.meta);
         node.meta.kind = "Undefined";
-      },
-      exit(node) {
-        graph.connect(node.stmtList.meta, node.meta.context.funcs[node.name].returns);
-      }
-    },
-    divide: binary("divide"),
-    exponentiate: binary("exponentiate"),
-    modulo: binary("modulo"),
-    multiply: binary("multiply"),
-    negate: {
-      enter(node) {
-        graph.add(node.meta);
-        node.meta.kind = "Number";
-      },
-      exit(node) {
-        graph.connect(node.value.meta, node.meta);
-      }
-    },
-    number: {
-      enter(node) {
-        graph.add(node.meta);
-        node.meta.kind = "Number";
-      }
-    },
-    stmtList: {
-      enter(node) {
+
+        visitor(node.stmtList);
+
+        graph.connect(node.stmtList.meta, node.meta);
+
+        break;
+      case "stmtList":
         graph.add(node.meta);
         node.meta.kind = "Open";
-      },
-      exit(node) {
+
+        node.meta.locals = {} as { [key: string]: Nodes.Meta };
+        node.meta.funcs = {} as { [key: string]: Nodes.Meta };
+  
+        node.stmts.forEach((stmt) => {
+          stmt.meta.context = node.meta;
+        });
+
+        node.stmts.forEach(visitor);
+
         graph.connect(node.stmts[node.stmts.length - 1].meta, node.meta);
-      }
-    },
-    subtract: binary("subtract"),
-    variable: {
-      enter(node) {
+
+        break;
+      case "variable":
         graph.add(node.meta);
         node.meta.kind = "Open";
-      },
-      exit(node) {
+
         graph.connect(node.meta.context.locals[node.name], node.meta);
-      }
+
+        break;
     }
-  };
+  }
 
-  return graphVisitor;
-};
-
-const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
-  const graph = new Graph<Nodes.Meta>();
-
-  visit(node, contextVisitor);
-  visit(node, makeGraphVisitor(graph));
+  visitor(node);
 
   return graph;
 };
@@ -226,7 +203,7 @@ const typeChecker = (node: Nodes.All): string[] => {
       continue;
     }
 
-    const queue: Node<Nodes.Meta>[] = [];
+    const queue: GraphNode<Nodes.Meta>[] = [];
     graphNode.lines.forEach((line) => {
       queue.push(line);
     });
