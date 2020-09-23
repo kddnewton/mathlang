@@ -27,8 +27,8 @@ export declare namespace Tokens {
 }
 
 export declare namespace Nodes {
-  type Meta = { [key: string]: any };
-  type Node<K, V> = { kind: K, meta: Meta } & V;
+  type Type = { [key: string]: any };
+  type Node<K, V> = { kind: K, type: Type } & V;
 
   type Add = Node<"add", { left: Expr, right: Expr }>;
   type Assign = Node<"assign", { name: string, value: Expr }>;

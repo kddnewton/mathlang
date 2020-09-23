@@ -29,23 +29,23 @@ class Graph<T> {
   }
 }
 
-type FuncType = { params: Nodes.Meta[], returns: Nodes.Meta } & Nodes.Meta;
+type FuncType = { params: Nodes.Type[], returns: Nodes.Type } & Nodes.Type;
 
-const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
-  const graph = new Graph<Nodes.Meta>();
+const typeGrapher = (node: Nodes.All): Graph<Nodes.Type> => {
+  const graph = new Graph<Nodes.Type>();
 
   const makeFunc = (paramTypes: string[], returnType: string): FuncType => {
-    const meta: FuncType = { kind: "Function", params: [], returns: { kind: returnType } };
-    graph.add(meta);
+    const type: FuncType = { kind: "Function", params: [], returns: { kind: returnType } };
+    graph.add(type);
 
     paramTypes.forEach((paramType, index) => {
-      meta.params[index] = { kind: paramType };
-      graph.add(meta.params[index]);
+      type.params[index] = { kind: paramType };
+      graph.add(type.params[index]);
     });
 
-    graph.add(meta.returns);
+    graph.add(type.returns);
 
-    return meta;
+    return type;
   };
 
   const stdlibTypes: { [T in keyof StdLib]: FuncType } = {
@@ -65,6 +65,8 @@ const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
   const isStdLib = (key: string): key is keyof typeof stdlibTypes => key in stdlibTypes;
 
   const visitor = (node: Nodes.All): void => {
+    graph.add(node.type);
+
     switch (node.kind) {
       case "add":
       case "divide":
@@ -72,117 +74,108 @@ const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
       case "modulo":
       case "multiply":
       case "subtract": {
-        graph.add(node.meta);
-        node.meta.kind = "Open";
+        node.type.kind = "Open";
 
-        node.left.meta.context = node.meta.context;
-        node.right.meta.context = node.meta.context;
+        node.left.type.context = node.type.context;
+        node.right.type.context = node.type.context;
 
         visitor(node.left);
         visitor(node.right);
 
         const func = stdlibTypes[node.kind];
-        graph.connect(node.left.meta, func.params[0]);
-        graph.connect(node.right.meta, func.params[1]);
-        graph.connect(func.returns, node.meta);
+        graph.connect(node.left.type, func.params[0]);
+        graph.connect(node.right.type, func.params[1]);
+        graph.connect(func.returns, node.type);
 
         break;
       }
       case "assign": {
-        graph.add(node.meta);
-        node.meta.kind = "Undefined";
+        node.type.kind = "Undefined";
 
-        node.value.meta.context = node.meta.context;
+        node.value.type.context = node.type.context;
 
-        const meta = { kind: "Open" };
-        node.meta.context.locals[node.name] = meta;
-        graph.add(meta);
+        const type = { kind: "Open" };
+        node.type.context.locals[node.name] = type;
+        graph.add(type);
 
         visitor(node.value);
 
-        graph.connect(node.value.meta, node.meta);
-        graph.connect(node.meta.context.locals[node.name], node.meta);
+        graph.connect(node.value.type, node.type);
+        graph.connect(node.type.context.locals[node.name], node.type);
 
         break;
       }
       case "call": {
-        graph.add(node.meta);
-        node.meta.kind = "Open";
+        node.type.kind = "Open";
 
         node.args.forEach((arg) => {
-          arg.meta.context = node.meta.context;
+          arg.type.context = node.type.context;
         });
 
         node.args.forEach(visitor);
   
-        const func: FuncType = isStdLib(node.name) ? stdlibTypes[node.name] : node.meta.context.funcs[node.name];
+        const func: FuncType = isStdLib(node.name) ? stdlibTypes[node.name] : node.type.context.funcs[node.name];
         func.params.forEach((param, index) => {
-          graph.connect(node.args[index].meta, param);
+          graph.connect(node.args[index].type, param);
         });
 
-        graph.connect(func.returns, node.meta);
+        graph.connect(func.returns, node.type);
 
         break;
       }
       case "define": {
-        graph.add(node.meta);
-        node.meta.kind = "Undefined";
+        node.type.kind = "Undefined";
 
-        const meta = makeFunc(node.paramList.params.map(() => "Open"), "Open");
-        node.meta.context.funcs[node.name] = meta;
+        const type = makeFunc(node.paramList.params.map(() => "Open"), "Open");
+        node.type.context.funcs[node.name] = type;
 
         visitor(node.stmtList);
 
-        graph.connect(node.stmtList.meta, node.meta.context.funcs[node.name].returns);
+        graph.connect(node.stmtList.type, node.type.context.funcs[node.name].returns);
 
         break;
       }
       case "negate":
-        graph.add(node.meta);
-        node.meta.kind = "Number";
+        node.type.kind = "Number";
 
-        node.value.meta.context = node.meta.context;
+        node.value.type.context = node.type.context;
 
         visitor(node.value);
 
-        graph.connect(node.value.meta, node.meta);
+        graph.connect(node.value.type, node.type);
 
         break;
       case "number":
-        graph.add(node.meta);
-        node.meta.kind = "Number";
+        node.type.kind = "Number";
 
         break;
       case "program":
-        graph.add(node.meta);
-        node.meta.kind = "Undefined";
+        node.type.kind = "Undefined";
 
         visitor(node.stmtList);
 
-        graph.connect(node.stmtList.meta, node.meta);
+        graph.connect(node.stmtList.type, node.type);
 
         break;
       case "stmtList":
-        graph.add(node.meta);
-        node.meta.kind = "Open";
+        node.type.kind = "Open";
 
-        node.meta.locals = {} as { [key: string]: Nodes.Meta };
-        node.meta.funcs = {} as { [key: string]: Nodes.Meta };
+        node.type.locals = {} as { [key: string]: Nodes.Type };
+        node.type.funcs = {} as { [key: string]: Nodes.Type };
   
         node.stmts.forEach((stmt) => {
-          stmt.meta.context = node.meta;
+          stmt.type.context = node.type;
         });
 
         node.stmts.forEach(visitor);
 
-        graph.connect(node.stmts[node.stmts.length - 1].meta, node.meta);
+        graph.connect(node.stmts[node.stmts.length - 1].type, node.type);
 
         break;
       case "variable":
-        graph.add(node.meta);
-        node.meta.kind = "Open";
+        node.type.kind = "Open";
 
-        graph.connect(node.meta.context.locals[node.name], node.meta);
+        graph.connect(node.type.context.locals[node.name], node.type);
 
         break;
     }
@@ -195,7 +188,7 @@ const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
 
 const typeChecker = (node: Nodes.All): string[] => {
   const graph = typeGrapher(node);
-  const errors: { lower: Nodes.Meta, upper: Nodes.Meta }[] = [];
+  const errors: { lower: Nodes.Type, upper: Nodes.Type }[] = [];
 
   for (const graphNode of graph.nodes) {
     const lower = graphNode.value;
@@ -203,7 +196,7 @@ const typeChecker = (node: Nodes.All): string[] => {
       continue;
     }
 
-    const queue: GraphNode<Nodes.Meta>[] = [];
+    const queue: GraphNode<Nodes.Type>[] = [];
     graphNode.lines.forEach((line) => {
       queue.push(line);
     });
