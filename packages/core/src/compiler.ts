@@ -1,39 +1,27 @@
 import { Insns, Nodes } from "./types";
+import transform, { Transformer } from "./transform";
 
-const compiler = (node: Nodes.All): Insns.All[] => {
-  switch (node.kind) {
-    case "add":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "add" });
-    case "assign":
-      return compiler(node.value).concat(node.name, { kind: "assign" });
-    case "call":
-      return node.args.reverse().flatMap(compiler).concat(node.args.length, node.name, { kind: "call" });
-    case "define": {
-      let insns: Insns.All[] = [compiler(node.stmtList)];
-      insns = insns.concat(node.paramList.params.reverse().map((param) => param.name));
-      return insns.concat(node.paramList.params.length, node.name, { kind: "define" });
-    }
-    case "divide":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "divide" });
-    case "exponentiate":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "exponentiate" });
-    case "modulo":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "modulo" });
-    case "multiply":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "multiply" });
-    case "negate":
-      return compiler(node.value).concat({ kind: "negate" });
-    case "number":
-      return [node.value];
-    case "program":
-      return compiler(node.stmtList);
-    case "stmtList":
-      return node.stmts.flatMap(compiler);
-    case "subtract":
-      return compiler(node.right).concat(compiler(node.left)).concat({ kind: "subtract" });
-    case "variable":
-      return [node.name, { kind: "variable" }];
-  }
+const compilerTransformer: Transformer<Insns.All[]> = {
+  add: ({ left, right }) => right.concat(left).concat({ kind: "add" }),
+  assign: ({ name, value }) => value.concat(name, { kind: "assign" }),
+  call: ({ name, args }) => args.reverse().flat().concat(args.length, name, { kind: "call" }),
+  define: ({ name, paramList, stmtList }) => {
+    let insns: Insns.All[] = [stmtList];
+    insns = insns.concat(paramList.params.reverse().map((param) => param.name));
+    return insns.concat(paramList.params.length, name, { kind: "define" });
+  },
+  divide: ({ left, right }) => right.concat(left).concat({ kind: "divide" }),
+  exponentiate: ({ left, right }) => right.concat(left).concat({ kind: "exponentiate" }),
+  modulo: ({ left, right }) => right.concat(left).concat({ kind: "modulo" }),
+  multiply: ({ left, right }) => right.concat(left).concat({ kind: "multiply" }),
+  negate: ({ value }) => value.concat({ kind: "negate" }),
+  number: ({ value }) => [value],
+  program: ({ stmtList }) => stmtList,
+  stmtList: ({ stmts }) => stmts.flat(),
+  subtract: ({ left, right }) => right.concat(left).concat({ kind: "subtract" }),
+  variable: ({ name }) => [name, { kind: "variable" }]
 };
+
+const compiler = (node: Nodes.All): Insns.All[] => transform(node, compilerTransformer);
 
 export default compiler;
