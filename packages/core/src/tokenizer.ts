@@ -39,19 +39,35 @@ const tokenizer = (input: string) => {
     const groups = match.groups || {};
 
     if (groups.newline) {
-      tokens.push({ kind: "newline", loc: { ...loc } });
+      tokens.push({
+        kind: "newline",
+        start: { ...loc },
+        end: { pos: loc.pos + 1, line: loc.line + 1, col: 0 }
+      });
+
       loc.line += groups.newline.length;
     } else if (groups.whitespace) {
       // skip straight over whitespace
     } else if (groups.special) {
-      tokens.push({ kind: groups.special as Special, loc: { ...loc } });
+      tokens.push({
+        kind: groups.special as Special,
+        start: { ...loc },
+        end: { pos: loc.pos + 1, line: loc.line, col: loc.col + 1 }
+      });
     } else if (groups.nonDecNumber) {
       const [full, digits] = nonDecNumberPattern.exec(groups.nonDecNumber);
-
       const bases = { "b": 2, "o": 8, "x": 16 };
-      let value = parseInt(digits.slice(1), bases[digits.charAt(0) as keyof typeof bases]);
 
-      tokens.push({ kind: "number", value, source: groups.nonDecNumber, loc: { ...loc } });
+      const value = parseInt(digits.slice(1), bases[digits.charAt(0) as keyof typeof bases]);
+      const source = groups.nonDecNumber;
+
+      tokens.push({
+        kind: "number",
+        value,
+        source,
+        start: { ...loc },
+        end: { pos: loc.pos + source.length, line: loc.line, col: loc.col + source.length }
+      });
     } else if (groups.decNumber) {
       const [full, digits, power] = decNumberPattern.exec(groups.decNumber);
 
@@ -60,9 +76,29 @@ const tokenizer = (input: string) => {
         value *= Math.pow(10, parseInt(power, 10));
       }
 
-      tokens.push({ kind: "number", value, source: groups.decNumber, loc: { ...loc } });
+      const source = groups.decNumber;
+      tokens.push({
+        kind: "number",
+        value,
+        source,
+        start: { ...loc },
+        end: {
+          pos: loc.pos + source.length,
+          line: loc.line,
+          col: loc.col + source.length
+        }
+      });
     } else if (groups.name) {
-      tokens.push({ kind: "name", value: groups.name, loc: { ...loc } });
+      tokens.push({
+        kind: "name",
+        value: groups.name,
+        start: { ...loc },
+        end: {
+          pos: loc.pos + groups.name.length,
+          line: loc.line,
+          col: loc.col + groups.name.length
+        }
+      });
     }
 
     loc.pos = match.index + match[0].length;

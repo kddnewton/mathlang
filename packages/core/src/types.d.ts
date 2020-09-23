@@ -1,6 +1,6 @@
 export declare namespace Tokens {
   type Loc = { line: number, col: number, pos: number };
-  type Token<K, V = undefined> = { kind: K, loc: Loc } & (V extends undefined ? {} : V);
+  type Token<K, V = undefined> = { kind: K, start: Loc, end: Loc } & (V extends undefined ? {} : V);
 
   type Plus = Token<"+">;
   type Minus = Token<"-">;
