@@ -1,5 +1,6 @@
-import { Nodes, Tokens } from "./types";
+import { Location, Nodes, Tokens } from "./types";
 import { add, assign, call, define, divide, exponentiate, modulo, multiply, negate, number, param, paramList, program, stmtList, subtract, variable } from "./builders";
+import { isStdLib } from "./stdlib";
 
 /**
  * Grammar:
@@ -19,6 +20,17 @@ import { add, assign, call, define, divide, exponentiate, modulo, multiply, nega
  * ArgList -> Expr (Comma ArgList)*
  * GetLocal -> Name
  */
+
+class ParseError extends Error {
+  public location: Location;
+
+  constructor(message: string, location: Location) {
+    super(message);
+
+    this.name = "ParseError";
+    this.location = location;
+  }
+}
 
 type SomeConsumed<T> = { node: T, size: number };
 type Consumed<T> = SomeConsumed<T> | null;
@@ -278,6 +290,10 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
     paramList: params ? params.node : paramList({ params: [] }),
     stmtList: stmtList({ stmts: [body.node] })
   });
+
+  if (isStdLib(node.name)) {
+    throw new ParseError("Cannot redefine stdlib functions.", token.start)
+  }
 
   return { node, size: paramsSize + body.size + 4 };
 }
