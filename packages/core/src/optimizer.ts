@@ -44,48 +44,46 @@ const optimize = (node: Nodes.All, optimizer: Optimizer): Nodes.All => {
   return visitNode(node);
 };
 
-type ConstantBinaryExpression = Nodes.Node<Nodes.Binary["kind"], {
-  left: Nodes.Number,
-  right: Nodes.Number,
-}>;
+const isNumber = (node: Nodes.All): node is Nodes.Number => node.kind === "number";
 
-function isConstantBinaryExpression(node: Nodes.Binary): node is ConstantBinaryExpression {
-  return node.left.kind === "number" && node.right.kind === "number";
-}
-
-const replaceConstantBinaryExpressions: Optimizer = {
-  add(node: Nodes.Add) {
-    if (isConstantBinaryExpression(node)) {
+const replaceConstantExpressions: Optimizer = {
+  add(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: node.left.value + node.right.value });
     }
   },
-  divide(node: Nodes.Divide) {
-    if (isConstantBinaryExpression(node)) {
+  divide(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: node.left.value / node.right.value });
     }
   },
-  exponentiate(node: Nodes.Exponentiate) {
-    if (isConstantBinaryExpression(node)) {
+  exponentiate(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: Math.pow(node.left.value, node.right.value) });
     }
   },
-  modulo(node: Nodes.Modulo) {
-    if (isConstantBinaryExpression(node)) {
+  modulo(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: node.left.value % node.right.value });
     }
   },
-  multiply(node: Nodes.Multiply) {
-    if (isConstantBinaryExpression(node)) {
+  multiply(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: node.left.value * node.right.value });
     }
   },
-  subtract(node: Nodes.Subtract) {
-    if (isConstantBinaryExpression(node)) {
+  negate(node) {
+    if (isNumber(node.value)) {
+      return number({ value: node.value.value * -1 });
+    }
+  },
+  subtract(node) {
+    if (isNumber(node.left) && isNumber(node.right)) {
       return number({ value: node.left.value - node.right.value });
     }
   }
 };
 
-const optimizer = (node: Nodes.All): Nodes.All => optimize(node, replaceConstantBinaryExpressions);
+const optimizer = (node: Nodes.All): Nodes.All => optimize(node, replaceConstantExpressions);
 
 export default optimizer;
