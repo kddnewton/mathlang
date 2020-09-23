@@ -12,29 +12,29 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
   const visitNode = <T extends Nodes.All>(node: Nodes.All): T => {
     switch (node.kind) {
       case "add":
-        return optimizeNode(add(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(add({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "assign":
-        return optimizeNode(assign(node.name, visitNode(node.value)));
+        return optimizeNode(assign({ name: node.name, value: visitNode(node.value) }));
       case "call":
-        return optimizeNode(call(node.name, node.args.map((arg) => visitNode(arg))));
+        return optimizeNode(call({ name: node.name, args: node.args.map((arg) => visitNode(arg)) }));
       case "define":
-        return optimizeNode(define(node.name, node.paramList, visitNode(node.stmtList)));
+        return optimizeNode(define({ name: node.name, paramList: node.paramList, stmtList: visitNode(node.stmtList) }));
       case "divide":
-        return optimizeNode(divide(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(divide({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "exponentiate":
-        return optimizeNode(exponentiate(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(exponentiate({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "modulo":
-        return optimizeNode(modulo(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(modulo({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "multiply":
-        return optimizeNode(multiply(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(multiply({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "negate":
-        return optimizeNode(negate(visitNode(node.value)));
+        return optimizeNode(negate({ value: visitNode(node.value) }));
       case "program":
-        return optimizeNode(program(visitNode(node.stmtList)));
+        return optimizeNode(program({ stmtList: visitNode(node.stmtList) }));
       case "stmtList":
-        return optimizeNode(stmtList(node.stmts.map(visitNode) as Nodes.Stmt[]));
+        return optimizeNode(stmtList({ stmts: node.stmts.map(visitNode) as Nodes.Stmt[] }));
       case "subtract":
-        return optimizeNode(subtract(visitNode(node.left), visitNode(node.right)));
+        return optimizeNode(subtract({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "number":
       case "variable":
         return node as T;
@@ -56,32 +56,32 @@ function isConstantBinaryExpression(node: Nodes.Binary): node is ConstantBinaryE
 const replaceConstantBinaryExpressions: Optimizer = {
   add(node: Nodes.Add) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value + node.right.value);
+      return number({ value: node.left.value + node.right.value });
     }
   },
   divide(node: Nodes.Divide) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value / node.right.value);
+      return number({ value: node.left.value / node.right.value });
     }
   },
   exponentiate(node: Nodes.Exponentiate) {
     if (isConstantBinaryExpression(node)) {
-      return number(Math.pow(node.left.value, node.right.value));
+      return number({ value: Math.pow(node.left.value, node.right.value) });
     }
   },
   modulo(node: Nodes.Modulo) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value % node.right.value);
+      return number({ value: node.left.value % node.right.value });
     }
   },
   multiply(node: Nodes.Multiply) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value * node.right.value);
+      return number({ value: node.left.value * node.right.value });
     }
   },
   subtract(node: Nodes.Subtract) {
     if (isConstantBinaryExpression(node)) {
-      return number(node.left.value - node.right.value);
+      return number({ value: node.left.value - node.right.value });
     }
   }
 };

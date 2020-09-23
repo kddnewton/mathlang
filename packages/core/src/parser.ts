@@ -58,7 +58,7 @@ function consumeNumber(tokens: Tokens.All[], current: number): Consumed<Nodes.Nu
   const token = tokens[current];
 
   if (matchNumber(token)) {
-    return { node: number(token.value, token.source), size: 1 };
+    return { node: number({ value: token.value, source: token.source }), size: 1 };
   }
   return null;
 }
@@ -68,7 +68,7 @@ function consumeGetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
   const token = tokens[current];
 
   if (matchName(token)) {
-    return { node: variable(token.value), size: 1 };
+    return { node: variable({ name: token.value }), size: 1 };
   }
   return null;
 }
@@ -107,7 +107,7 @@ function consumeCall(tokens: Tokens.All[], current: number): Consumed<Nodes.Call
   }
 
   return {
-    node: call(token.value, argList ? argList.node : []),
+    node: call({ name: token.value, args: argList ? argList.node : [] }),
     size: argListSize + 3
   };
 }
@@ -129,12 +129,17 @@ function consumeValue(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
     const consumed = consumeExpr(tokens, current + 1);
 
     if (consumed) {
-      return { node: negate(consumed.node), size: 1 + consumed.size };
+      return { node: negate({ value: consumed.node }), size: 1 + consumed.size };
     }
   }
 
   if (matchNumber(firstToken) && matchName(secondToken)) {
-    return { node: multiply(number(firstToken.value), variable(secondToken.value)), size: 2 };
+    const node = multiply({
+      left: number({ value: firstToken.value }),
+      right: variable({ name: secondToken.value })
+    });
+
+    return { node, size: 2 };
   }
 
   return consumeCall(tokens, current) || consumeGetLocal(tokens, current) || consumeNumber(tokens, current);
@@ -154,7 +159,7 @@ function consumePower(tokens: Tokens.All[], current: number): Consumed<Nodes.Exp
   const rightConsumed = consume(consumePower, tokens, current + 1 + leftConsumed.size);
 
   return {
-    node: exponentiate(leftConsumed.node, rightConsumed.node),
+    node: exponentiate({ left: leftConsumed.node, right: rightConsumed.node }),
     size: leftConsumed.size + 1 + rightConsumed.size
   };
 }
@@ -190,7 +195,7 @@ function consumeTerm(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   }
 
   return {
-    node: builder(leftConsumed.node, rightConsumed.node),
+    node: builder({ left: leftConsumed.node, right: rightConsumed.node }),
     size: leftConsumed.size + 1 + rightConsumed.size
   };
 }
@@ -210,7 +215,7 @@ function consumeExpr(tokens: Tokens.All[], current: number): Consumed<Nodes.Expr
   const builder = tokens[current + leftConsumed.size].kind === "+" ? add : subtract;
 
   return {
-    node: builder(leftConsumed.node, rightConsumed.node),
+    node: builder({ left: leftConsumed.node, right: rightConsumed.node }),
     size: leftConsumed.size + 1 + rightConsumed.size
   };
 }
@@ -223,14 +228,14 @@ function consumeParamList(tokens: Tokens.All[], current: number): Consumed<Nodes
     return null;
   }
 
-  const params = [param(token.value)];
+  const params = [param({ name: token.value })];
   if (!matchComma(tokens[current + 1])) {
-    return { node: paramList(params), size: 1 };
+    return { node: paramList({ params }), size: 1 };
   }
 
   const nextConsumed = consume(consumeParamList, tokens, current + 2);
   return {
-    node: paramList(params.concat(nextConsumed.node.params)),
+    node: paramList({ params: params.concat(nextConsumed.node.params) }),
     size: 2 + nextConsumed.size
   };
 }
@@ -262,16 +267,19 @@ function consumeDefine(tokens: Tokens.All[], current: number): Consumed<Nodes.De
     }
   
     return {
-      node: define(token.value, params ? params.node : paramList([]), body.node),
+      node: define({ name: token.value, paramList: params ? params.node : paramList({ params: [] }), stmtList: body.node }),
       size: paramsSize + body.size + 7
     };
   }
 
   const body = consume(consumeStmt, tokens, current + 4 + paramsSize);
-  return {
-    node: define(token.value, params ? params.node : paramList([]), stmtList([body.node])),
-    size: paramsSize + body.size + 4
-  };
+  const node = define({
+    name: token.value,
+    paramList: params ? params.node : paramList({ params: [] }),
+    stmtList: stmtList({ stmts: [body.node] })
+  });
+
+  return { node, size: paramsSize + body.size + 4 };
 }
 
 // SetLocal -> Name Equals Expr
@@ -287,7 +295,7 @@ function consumeSetLocal(tokens: Tokens.All[], current: number): Consumed<Nodes.
     return null;
   }
 
-  return { node: assign(token.value, consumed.node), size: consumed.size + 2 };
+  return { node: assign({ name: token.value, value: consumed.node }), size: consumed.size + 2 };
 }
 
 // Stmt -> Define | SetLocal | Expr
@@ -299,16 +307,16 @@ function consumeStmt(tokens: Tokens.All[], current: number): Consumed<Nodes.Stmt
 function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.StmtList> {
   const consumed = consumeStmt(tokens, current);
   if (!consumed) {
-    return { node: stmtList([]), size: 0 };
+    return { node: stmtList({ stmts: [] }), size: 0 };
   }
 
   if (!matchNewLine(tokens[current + consumed.size])) {
-    return { node: stmtList([consumed.node]), size: consumed.size };
+    return { node: stmtList({ stmts: [consumed.node] }), size: consumed.size };
   }
 
   const nextStmtList = consume(consumeStmtList, tokens, current + consumed.size + 1);
   return {
-    node: stmtList([consumed.node].concat(nextStmtList.node.stmts)),
+    node: stmtList({ stmts: [consumed.node].concat(nextStmtList.node.stmts) }),
     size: consumed.size + 1 + nextStmtList.size
   };
 }
@@ -316,7 +324,7 @@ function consumeStmtList(tokens: Tokens.All[], current: number): Consumed<Nodes.
 // Program -> StmtList
 function consumeProgram(tokens: Tokens.All[], current: number): Consumed<Nodes.Program> {
   const consumed = consume(consumeStmtList, tokens, current);
-  return { node: program(consumed.node), size: consumed.size };
+  return { node: program({ stmtList: consumed.node }), size: consumed.size };
 }
 
 const parser = (tokens: Tokens.All[]): Nodes.Program => {

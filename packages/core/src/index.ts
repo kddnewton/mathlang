@@ -27,10 +27,12 @@ export const evaluate = (source: string, options: Options = {}) => (
 
 export const execute = (define: Nodes.Define, ...input: number[]) => {
   const stmts: Nodes.Stmt[] = input.map((value, index) => (
-    assign(define.paramList.params[index].name, number(value))
+    assign({ name: define.paramList.params[index].name, value: number({ value }) })
   ));
 
-  return virtualMachine(compiler(program(stmtList(stmts.concat(define.stmtList.stmts)))));
+  return virtualMachine(compiler(program({
+    stmtList: stmtList({ stmts: stmts.concat(define.stmtList.stmts) })
+  })));
 };
 
 export const tokenize = tokenizer;
