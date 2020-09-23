@@ -9,7 +9,7 @@ import virtualMachine from "./virtualMachine";
 
 type Options = { optimize?: boolean };
 
-const optimizeWithOptions = (node: Nodes.Program, options: Options) => (
+const optimizeWithOptions = (node: Nodes.All, options: Options) => (
   options.optimize ? optimizer(node) : node
 );
 

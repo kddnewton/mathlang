@@ -3,13 +3,13 @@ import { add, assign, call, define, divide, exponentiate, modulo, multiply, nega
 
 type Optimizer = Partial<{ [T in Nodes.All["kind"]]: (node: Nodes.All & { kind: T }) => Nodes.All | undefined }>;
 
-const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
-  const optimizeNode = <T extends Nodes.All>(node: Nodes.All): T => {
+const optimize = (node: Nodes.All, optimizer: Optimizer): Nodes.All => {
+  const optimizeNode = <N extends Nodes.All>(node: Nodes.All): N => {
     const callback = optimizer[node.kind];
     return callback ? ((callback as any)(node) || node) : node;
   };
 
-  const visitNode = <T extends Nodes.All>(node: Nodes.All): T => {
+  const visitNode = <N extends Nodes.All>(node: Nodes.All): N => {
     switch (node.kind) {
       case "add":
         return optimizeNode(add({ left: visitNode(node.left), right: visitNode(node.right) }));
@@ -37,11 +37,11 @@ const optimize = (node: Nodes.Program, optimizer: Optimizer): Nodes.Program => {
         return optimizeNode(subtract({ left: visitNode(node.left), right: visitNode(node.right) }));
       case "number":
       case "variable":
-        return node as T;
+        return node as N;
     }
   }
 
-  return visitNode<Nodes.Program>(node);
+  return visitNode(node);
 };
 
 type ConstantBinaryExpression = Nodes.Node<Nodes.Binary["kind"], {
@@ -86,6 +86,6 @@ const replaceConstantBinaryExpressions: Optimizer = {
   }
 };
 
-const optimizer = (node: Nodes.Program) => optimize(node, replaceConstantBinaryExpressions);
+const optimizer = (node: Nodes.All): Nodes.All => optimize(node, replaceConstantBinaryExpressions);
 
 export default optimizer;

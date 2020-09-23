@@ -5,7 +5,7 @@ export type Visitor = Partial<{ [T in Nodes.All["kind"]]: {
   exit?: (node: Nodes.All & { kind: T }) => void
 }}>;
 
-const visit = (node: Nodes.Program, visitor: Visitor): void => {
+const visit = (node: Nodes.All, visitor: Visitor): void => {
   const visitNode = (node: Nodes.All): void => {
     const callbacks = visitor[node.kind];
     if (callbacks && callbacks.enter) {

@@ -207,7 +207,7 @@ const makeGraphVisitor = (graph: Graph<Nodes.Meta>): Visitor => {
   return graphVisitor;
 };
 
-const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
+const typeGrapher = (node: Nodes.All): Graph<Nodes.Meta> => {
   const graph = new Graph<Nodes.Meta>();
 
   visit(node, contextVisitor);
@@ -216,7 +216,7 @@ const typeGrapher = (node: Nodes.Program): Graph<Nodes.Meta> => {
   return graph;
 };
 
-const typeChecker = (node: Nodes.Program): string[] => {
+const typeChecker = (node: Nodes.All): string[] => {
   const graph = typeGrapher(node);
   const errors: { lower: Nodes.Meta, upper: Nodes.Meta }[] = [];
 
