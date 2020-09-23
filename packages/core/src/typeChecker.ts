@@ -9,8 +9,8 @@ class Graph<T> {
     this.nodes = [];
   }
 
-  add(meta: T) {
-    this.nodes.push({ value: meta, lines: [] });
+  add(value: T) {
+    this.nodes.push({ value, lines: [] });
   }
 
   connect(lower: T, upper: T) {
