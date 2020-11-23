@@ -55,7 +55,7 @@ const tokenizer = (input: string) => {
         end: { pos: loc.pos + 1, line: loc.line, col: loc.col + 1 }
       });
     } else if (groups.nonDecNumber) {
-      const [full, digits] = nonDecNumberPattern.exec(groups.nonDecNumber);
+      const [full, digits] = nonDecNumberPattern.exec(groups.nonDecNumber)!;
       const bases = { "b": 2, "o": 8, "x": 16 };
 
       const value = parseInt(digits.slice(1), bases[digits.charAt(0) as keyof typeof bases]);
@@ -69,7 +69,7 @@ const tokenizer = (input: string) => {
         end: { pos: loc.pos + source.length, line: loc.line, col: loc.col + source.length }
       });
     } else if (groups.decNumber) {
-      const [full, digits, power] = decNumberPattern.exec(groups.decNumber);
+      const [full, digits, power] = decNumberPattern.exec(groups.decNumber)!;
 
       let value = parseFloat(digits.replace(/,/g, ""));
       if (power) {

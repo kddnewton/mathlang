@@ -20,7 +20,7 @@ const copyToClipboard = (text: string): Promise<unknown> => {
 
     return new Promise((resolve, reject) => {
       if (document.execCommand("copy")) {
-        resolve();
+        resolve(null);
       } else {
         reject();
       }
