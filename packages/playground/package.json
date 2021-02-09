@@ -28,7 +28,7 @@
     "babel-loader": "^8.2.2",
     "css-loader": "^5.0.2",
     "style-loader": "^2.0.0",
-    "ts-loader": "^8.0.15",
+    "ts-loader": "^8.0.16",
     "webpack": "^5.21.2",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
