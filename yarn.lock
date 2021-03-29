@@ -1261,10 +1261,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/draft-js@^0.10.44":
-  version "0.10.45"
-  resolved "https://registry.yarnpkg.com/@types/draft-js/-/draft-js-0.10.45.tgz#4ab5b0785fcacdea7d5a836d0024158fa8108e70"
-  integrity sha512-ozmVQEI088kGQfY2XPB0b+YRNbkv1mxdxcLieBLCc2F4IkVWMs6mnIaEbBRExmM3H/Amm9CvhlmIYmDL4CjBvA==
+"@types/draft-js@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@types/draft-js/-/draft-js-0.11.1.tgz#f67920c9583054143e263704e250dd3086de3ef3"
+  integrity sha512-jV4LAXYdVvS0ahIROZehkKqHgfLxaDBl3fzfEVqho8NxFAtEaObdIiu7FpPUu/Y97PlJVxGajar7aSikQqz9sQ==
   dependencies:
     "@types/react" "*"
     immutable "~3.7.4"
