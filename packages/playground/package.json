@@ -20,7 +20,7 @@
     "@babel/core": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
     "@babel/preset-react": "^7.13.13",
-    "@babel/preset-typescript": "^7.13.0",
+    "@babel/preset-typescript": "^7.14.5",
     "@babel/register": "^7.13.16",
     "@types/draft-js": "^0.11.3",
     "@types/react": "^17.0.9",
