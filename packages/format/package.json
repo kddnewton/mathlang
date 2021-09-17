@@ -6,6 +6,6 @@
   "license": "MIT",
   "dependencies": {
     "@mathlang/core": "^0.1.0",
-    "prettier": "^2.4.0"
+    "prettier": "^2.4.1"
   }
 }
